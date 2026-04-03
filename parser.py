@@ -1,0 +1,40 @@
+import pandas as pd
+from pymavlink import mavutil
+
+class parser:
+    @staticmethod
+    def gpsData(file_path):
+        mlog = mavutil.mavlink_connection(file_path)
+        gps_records = []
+
+        while True:
+            msg = mlog.recv_match(type='GPS', blocking=False)
+            if msg is None:
+                break
+            gps_records.append({
+                'timestamp': msg._timestamp,
+                'lat': msg.Lat, #широта в градусах × 10^-7
+                'lon': msg.Lng, #довгота в градусах × 10^-7
+                'alt': msg.Alt, #висота в метрах
+                'spd': msg.Spd, #горизонтальна швидкість м/с
+            })
+        df_gps = pd.DataFrame(gps_records)
+        return df_gps
+    @staticmethod
+    def imuData(file_path):
+        mlog = mavutil.mavlink_connection(file_path)
+        imu_records = []
+
+        while True:
+            msg = mlog.recv_match(type='IMU', blocking=False)
+            if msg is None:
+                break
+            imu_records.append({
+                'timestamp': msg._timestamp,
+                'AccX': msg.AccX, #прискорення по X (м/с²)
+                'AccY': msg.AccY, #прискорення по Y (м/с²)  
+                'AccZ': msg.AccZ, #прискорення по Z (м/с²)
+            })
+        df_imu = pd.DataFrame(imu_records)
+        df_imu['dt'] = df_imu['timestamp'].diff().fillna(0)
+        return df_imu

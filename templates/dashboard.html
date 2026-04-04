@@ -554,21 +554,13 @@
         </div>
       </div>
 
-      <!-- 3D graph placeholder -->
+      <!-- 3D trajectory graph -->
       <div>
         <div class="dash-section-head">
           <span class="dash-section-title">3D Trajectory — ENU Space</span>
         </div>
-        <div class="graph-3d-placeholder bracketed">
-          <canvas class="traj-canvas" id="trajCanvas"></canvas>
-          <div class="graph-placeholder-tag">3D · ENU · PLACEHOLDER</div>
-          <div class="graph-axis-tag" style="bottom:14px;left:14px">E →</div>
-          <div class="graph-axis-tag" style="bottom:14px;right:14px">N ↑</div>
-          <div class="graph-axis-tag" style="top:14px;right:14px">U ↑</div>
-          <div class="graph-label">
-            Plotly 3D graph renders here<br>
-            <span style="color:var(--text-faint);font-size:10px">connect visualization.py → build_3d_plot(df_enu)</span>
-          </div>
+        <div class="bracketed" style="background:var(--g2);border:1px solid var(--g4);height:380px;position:relative;">
+          <div id="plot3d" style="width:100%;height:100%;"></div>
         </div>
       </div>
 
@@ -728,74 +720,64 @@ function toggleSession(id) {
 buildSidebar();
 
 
-// ── animated placeholder trajectory (3D projection illusion) ────────────────
-const trajCanvas = document.getElementById('trajCanvas');
-if (trajCanvas) {
-  const ctx = trajCanvas.getContext('2d');
-  let t = 0;
+// ── Plotly 3D graph ──────────────────────────────────────────────────────────
+const plotEl = document.getElementById('plot3d');
+if (plotEl) {
+  const d = {{ plot_data | safe }};
+  if (d && d.E) {
+    const traces = [
+      {
+        type: 'scatter3d',
+        mode: 'lines',
+        x: d.E, y: d.N, z: d.U,
+        line: {
+          color: d.spd.length ? d.spd : d.U,
+          colorscale: 'Viridis',
+          width: 4,
+          colorbar: {
+            thickness: 12,
+            len: 0.5,
+            tickfont: { color: '#a0a8b8' },
+            title: { text: d.spd.length ? 'Speed (m/s)' : 'Alt (m)', font: { color: '#a0a8b8' } },
+          },
+        },
+        hovertemplate: 'E: %{x:.1f} m<br>N: %{y:.1f} m<br>Alt: %{z:.1f} m<extra></extra>',
+        name: 'Trajectory',
+      },
+      {
+        type: 'scatter3d', mode: 'markers+text',
+        x: [d.takeoff.E], y: [d.takeoff.N], z: [d.takeoff.U],
+        marker: { size: 7, color: '#39ff6e' },
+        text: ['Takeoff'], textposition: 'top center',
+        textfont: { color: '#39ff6e', size: 11 },
+        showlegend: false,
+      },
+      {
+        type: 'scatter3d', mode: 'markers+text',
+        x: [d.landing.E], y: [d.landing.N], z: [d.landing.U],
+        marker: { size: 7, color: '#ff4545', symbol: 'square' },
+        text: ['Landing'], textposition: 'top center',
+        textfont: { color: '#ff4545', size: 11 },
+        showlegend: false,
+      },
+    ];
 
-  function resizeTraj() {
-    trajCanvas.width  = trajCanvas.offsetWidth;
-    trajCanvas.height = trajCanvas.offsetHeight;
+    const layout = {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor:  'rgba(0,0,0,0)',
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+      scene: {
+        bgcolor: 'rgba(14,19,24,1)',
+        xaxis: { title: 'East (m)',  titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+        yaxis: { title: 'North (m)', titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+        zaxis: { title: 'Alt (m)',   titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+        aspectmode: 'data',
+      },
+      legend: { font: { color: '#a0a8b8' } },
+    };
+
+    Plotly.newPlot('plot3d', traces, layout, { responsive: true, displaylogo: false });
   }
-  resizeTraj();
-  window.addEventListener('resize', resizeTraj);
-
-  // Generate a fake 3D-ish flight path using parametric curves
-  function drawTraj() {
-    const W = trajCanvas.width, H = trajCanvas.height;
-    ctx.clearRect(0, 0, W, H);
-
-    const pts = 120;
-    const cx = W / 2, cy = H / 2;
-
-    ctx.beginPath();
-    for (let i = 0; i < pts; i++) {
-      const frac = i / pts;
-      const angle = frac * Math.PI * 3 + t * 0.3;
-      const r = 60 + frac * 80;
-      const x = cx + Math.cos(angle) * r * 1.4;
-      const y = cy + Math.sin(angle) * r * 0.5 - frac * H * 0.25;
-      const alpha = 0.08 + frac * 0.25;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.strokeStyle = `rgba(57,255,110,0.35)`;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // start/end dots
-    const startA = t * 0.3;
-    const sx = cx + Math.cos(startA) * 60 * 1.4;
-    const sy = cy + Math.sin(startA) * 60 * 0.5;
-    ctx.beginPath();
-    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(57,255,110,0.6)';
-    ctx.fill();
-
-    const endA = Math.PI * 3 + t * 0.3;
-    const ex = cx + Math.cos(endA) * 140 * 1.4;
-    const ey = cy + Math.sin(endA) * 140 * 0.5 - H * 0.25;
-    ctx.beginPath();
-    ctx.arc(ex, ey, 4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,69,69,0.6)';
-    ctx.fill();
-
-    // axis lines
-    ctx.strokeStyle = 'rgba(57,255,110,0.08)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 6]);
-    ctx.beginPath(); ctx.moveTo(40, H - 40); ctx.lineTo(W - 40, H - 40); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(40, H - 40); ctx.lineTo(40, 30); ctx.stroke();
-    ctx.setLineDash([]);
-
-    t += 0.012;
-    requestAnimationFrame(drawTraj);
-  }
-  drawTraj();
 }
 
 

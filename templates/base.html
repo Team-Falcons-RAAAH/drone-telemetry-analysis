@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}FALCONS — UAV Telemetry{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g0: #05080a;
+    --g1: #090d10;
+    --g2: #0e1318;
+    --g3: #141b22;
+    --g4: #1c2530;
+    --g5: #2a3545;
+    --acid: #39ff6e;
+    --acid-dim: #1d8c3d;
+    --acid-faint: #0d3d1c;
+    --wire: #1e2f20;
+    --text: #c8d8cc;
+    --text-dim: #5a7060;
+    --text-faint: #2e3e32;
+    --danger: #ff4545;
+    --warn: #ffa420;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--g0);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.06) 2px,
+      rgba(0,0,0,0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* grid noise bg */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(57,255,110,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,110,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 52px;
+    background: rgba(5,8,10,0.92);
+    border-bottom: 1px solid var(--wire);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 32px;
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-falcon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .nav-wordmark {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--acid);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .nav-link {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover, .nav-link.active {
+    color: var(--acid);
+    border-color: var(--wire);
+    background: var(--acid-faint);
+  }
+
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--acid);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding-top: 52px;
+  }
+
+  /* ── buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 12px 28px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--acid);
+    transform: translateX(-101%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+  }
+
+  .btn:hover::before { transform: translateX(0); }
+
+  .btn-primary {
+    color: var(--acid);
+    border-color: var(--acid);
+    background: transparent;
+  }
+  .btn-primary:hover { color: var(--g0); }
+
+  .btn-ghost {
+    color: var(--text-dim);
+    border-color: var(--g5);
+    background: transparent;
+  }
+  .btn-ghost:hover { color: var(--g0); --acid: var(--g5); }
+
+  /* ── cards ── */
+  .card {
+    background: var(--g2);
+    border: 1px solid var(--g4);
+    padding: 20px 24px;
+  }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* ── section tags ── */
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--acid-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--acid-dim);
+  }
+
+  /* ── metric chip ── */
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .metric-val {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--acid);
+    line-height: 1;
+  }
+
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── placeholder shapes ── */
+  .placeholder-block {
+    background: var(--g3);
+    border: 1px solid var(--g4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .placeholder-block::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(57,255,110,0.03) 50%,
+      transparent 60%
+    );
+    animation: shimmer 2.4s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .placeholder-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 12px;
+    line-height: 1.8;
+  }
+
+  /* corner bracket decoration */
+  .bracketed {
+    position: relative;
+  }
+  .bracketed::before, .bracketed::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--acid-dim);
+    border-style: solid;
+  }
+  .bracketed::before {
+    top: 0; left: 0;
+    border-width: 1px 0 0 1px;
+  }
+  .bracketed::after {
+    bottom: 0; right: 0;
+    border-width: 0 1px 1px 0;
+  }
+</style>
+{% block extra_styles %}{% endblock %}
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-brand">
+    <svg class="nav-falcon" viewBox="0 0 28 28" fill="none">
+      <path d="M14 2 L22 10 L18 10 L24 18 L16 15 L18 26 L14 20 L10 26 L12 15 L4 18 L10 10 L6 10 Z" fill="var(--acid)" opacity="0.9"/>
+      <circle cx="14" cy="11" r="2" fill="var(--g0)"/>
+    </svg>
+    <span class="nav-wordmark">Falcons</span>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link {% if request.endpoint == 'landing' %}active{% endif %}">Home</a>
+    <a href="/dashboard" class="nav-link {% if 'dashboard' in request.endpoint %}active{% endif %}">Dashboard</a>
+    <a href="/upload" class="nav-link {% if request.endpoint == 'upload_page' %}active{% endif %}">Upload</a>
+  </div>
+  <div class="nav-status">
+    <span class="status-dot"></span>
+    SYSTEM ONLINE
+  </div>
+</nav>
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<script>
+// Session history — lives in sessionStorage, dies on full reload
+const Sessions = {
+  key: 'falcons_sessions',
+  all() {
+    try { return JSON.parse(sessionStorage.getItem(this.key) || '[]'); }
+    catch { return []; }
+  },
+  add(session) {
+    const list = this.all().filter(s => s.id !== session.id);
+    list.unshift(session);
+    sessionStorage.setItem(this.key, JSON.stringify(list.slice(0, 8)));
+  },
+  get(id) { return this.all().find(s => s.id === id) || null; }
+};
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

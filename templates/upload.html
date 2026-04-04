@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+{% block title %}Upload — Falcons{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .upload-wrap {
+    min-height: calc(100vh - 52px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .upload-panel {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .upload-header {
+    margin-bottom: 32px;
+  }
+
+  .upload-title {
+    font-family: var(--display);
+    font-size: 42px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .upload-title span { color: var(--acid); }
+
+  .upload-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* drop zone */
+  .drop-zone {
+    border: 1px dashed var(--g5);
+    background: var(--g1);
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--acid-dim);
+    background: var(--acid-faint);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-icon {
+    margin: 0 auto 20px;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--g5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--g3);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon {
+    border-color: var(--acid-dim);
+    background: var(--acid-faint);
+  }
+
+  .drop-title {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .drop-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .file-selected {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--acid-faint);
+    border: 1px solid var(--wire);
+    margin-bottom: 24px;
+  }
+
+  .file-selected.visible { display: flex; }
+
+  .file-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--g3);
+    border: 1px solid var(--wire);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .file-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--acid);
+    letter-spacing: 0.04em;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-size {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  /* loading overlay */
+  .loading-overlay {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    padding: 32px;
+    background: var(--g2);
+    border: 1px solid var(--g4);
+    margin-top: 8px;
+  }
+
+  .loading-overlay.visible { display: flex; }
+
+  .loading-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .loading-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    transition: color 0.3s;
+  }
+
+  .loading-step.done { color: var(--acid); }
+  .loading-step.active { color: var(--text); }
+
+  .step-indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--g5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 8px;
+    transition: all 0.3s;
+  }
+
+  .loading-step.done .step-indicator {
+    border-color: var(--acid);
+    background: var(--acid);
+    color: var(--g0);
+  }
+
+  .loading-step.active .step-indicator {
+    border-color: var(--acid-dim);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* progress bar */
+  .progress-track {
+    height: 2px;
+    background: var(--g4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--acid);
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .progress-pct {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--acid);
+    letter-spacing: 0.06em;
+  }
+
+  .progress-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .submit-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn-full { width: 100%; justify-content: center; }
+
+  .upload-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .error-msg {
+    display: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--danger);
+    letter-spacing: 0.06em;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,69,69,0.3);
+    background: rgba(255,69,69,0.06);
+    margin-bottom: 16px;
+  }
+
+  .error-msg.visible { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-wrap">
+  <div class="upload-panel">
+    <div class="upload-header">
+      <div class="section-tag">// Mission Input</div>
+      <h1 class="upload-title">Upload <span>Log</span></h1>
+      <p class="upload-hint">ACCEPTS: ARDUPILOT .BIN BINARY FORMAT</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="drop-zone bracketed" id="dropZone">
+      <input type="file" id="fileInput" accept=".bin,.BIN">
+      <div class="drop-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--acid-dim)" stroke-width="1.2">
+          <path d="M11 2 L11 14 M7 6 L11 2 L15 6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 15 L3 18 L19 18 L19 15" stroke-linecap="round"/>
+          <path d="M7 11 L3 11 L3 18 L19 18 L19 11 L15 11" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="drop-title">Drop .bin file here</div>
+      <div class="drop-sub">or click to browse</div>
+    </div>
+
+    <div class="file-selected" id="fileSelected">
+      <div class="file-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--acid)" stroke-width="1.2">
+          <path d="M3 2 L10 2 L13 5 L13 14 L3 14 Z"/>
+          <path d="M10 2 L10 5 L13 5"/>
+        </svg>
+      </div>
+      <span class="file-name" id="fileName">—</span>
+      <span class="file-size" id="fileSize">—</span>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-title">Processing flight log</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" id="step0">
+          <div class="step-indicator">▸</div>
+          <span>Reading binary log structure</span>
+        </div>
+        <div class="loading-step" id="step1">
+          <div class="step-indicator">▸</div>
+          <span>Extracting GPS + IMU messages</span>
+        </div>
+        <div class="loading-step" id="step2">
+          <div class="step-indicator">▸</div>
+          <span>Converting WGS-84 → ENU coordinates</span>
+        </div>
+        <div class="loading-step" id="step3">
+          <div class="step-indicator">▸</div>
+          <span>Computing flight metrics</span>
+        </div>
+        <div class="loading-step" id="step4">
+          <div class="step-indicator">▸</div>
+          <span>Generating AI mission overview</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-label">
+          <span class="progress-pct" id="progressPct">0%</span>
+          <span class="progress-status" id="progressStatus">Initialising...</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="submitRow" class="submit-row">
+      <button class="btn btn-primary btn-full" id="submitBtn" disabled onclick="startUpload()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M5 7 L7 9 L10 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Analyse Mission
+      </button>
+    </div>
+
+    <p class="upload-note">// DATA IS NOT STORED — SESSION CLEARS ON RELOAD</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone   = document.getElementById('dropZone');
+const fileInput  = document.getElementById('fileInput');
+const fileSelected = document.getElementById('fileSelected');
+const fileName   = document.getElementById('fileName');
+const fileSize   = document.getElementById('fileSize');
+const submitBtn  = document.getElementById('submitBtn');
+const errorMsg   = document.getElementById('errorMsg');
+let selectedFile = null;
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function showFile(file) {
+  selectedFile = file;
+  fileName.textContent = file.name;
+  fileSize.textContent = formatSize(file.size);
+  fileSelected.classList.add('visible');
+  submitBtn.disabled = false;
+  errorMsg.classList.remove('visible');
+}
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) showFile(e.target.files[0]);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) showFile(f);
+});
+
+// ── fake loading sequence ───────────────────────────────────────────────────
+const STEPS = [
+  { id: 'step0', label: 'Reading binary log structure',        pct: 20, ms: 600  },
+  { id: 'step1', label: 'Extracting GPS + IMU messages',       pct: 42, ms: 900  },
+  { id: 'step2', label: 'Converting WGS-84 → ENU coordinates', pct: 62, ms: 700  },
+  { id: 'step3', label: 'Computing flight metrics',            pct: 80, ms: 600  },
+  { id: 'step4', label: 'Generating AI mission overview',      pct: 98, ms: 1100 },
+];
+
+function setProgress(pct, label) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent  = pct + '%';
+  document.getElementById('progressStatus').textContent = label;
+}
+
+function runSteps(sessionId, stepIndex) {
+  if (stepIndex >= STEPS.length) {
+    setProgress(100, 'Complete');
+    setTimeout(() => {
+      Sessions.add({
+        id:       sessionId,
+        filename: selectedFile.name,
+        size:     formatSize(selectedFile.size),
+        label:    selectedFile.name.replace(/\.bin$/i, '').toUpperCase(),
+        ts:       new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
+      window.location.href = '/dashboard/' + sessionId;
+    }, 400);
+    return;
+  }
+
+  const step = STEPS[stepIndex];
+  const el   = document.getElementById(step.id);
+
+  // mark previous as done
+  if (stepIndex > 0) {
+    const prev = document.getElementById(STEPS[stepIndex - 1].id);
+    prev.classList.remove('active');
+    prev.classList.add('done');
+    prev.querySelector('.step-indicator').textContent = '✓';
+  }
+
+  el.classList.add('active');
+  setProgress(step.pct, step.label + '...');
+
+  setTimeout(() => runSteps(sessionId, stepIndex + 1), step.ms);
+}
+
+async function startUpload() {
+  if (!selectedFile) return;
+
+  // hide submit, show loader
+  document.getElementById('submitRow').style.display = 'none';
+  document.getElementById('loadingOverlay').classList.add('visible');
+  setProgress(0, 'Uploading...');
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  let sessionId;
+  try {
+    const res  = await fetch('/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    sessionId = data.session_id;
+  } catch (err) {
+    document.getElementById('loadingOverlay').classList.remove('visible');
+    document.getElementById('submitRow').style.display = 'flex';
+    errorMsg.textContent = 'Upload failed: ' + err.message;
+    errorMsg.classList.add('visible');
+    return;
+  }
+
+  // run the fake loading animation steps
+  runSteps(sessionId, 0);
+}
+</script>
+{% endblock %}

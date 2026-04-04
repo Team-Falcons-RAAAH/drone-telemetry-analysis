@@ -1,0 +1,872 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Falcons{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100vh - 52px);
+  }
+
+  /* ── top bar ── */
+  .dash-topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--g3);
+    background: var(--g1);
+  }
+
+  .dash-breadcrumb {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-breadcrumb span { color: var(--acid); }
+
+  .dash-topbar-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-sm {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 7px 16px;
+    text-decoration: none;
+    border: 1px solid var(--g5);
+    color: var(--text-dim);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+  }
+
+  .btn-sm:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+
+  /* ── main content ── */
+  .dash-main {
+    padding: 28px 32px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border-right: 1px solid var(--g3);
+  }
+
+  .dash-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .dash-section-title {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .dash-section-file {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--acid);
+    letter-spacing: 0.04em;
+  }
+
+  /* metrics row */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--g3);
+    border: 1px solid var(--g3);
+    margin-bottom: 24px;
+  }
+
+  .metric-cell {
+    background: var(--g2);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .metric-cell-val {
+    font-family: var(--display);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--acid);
+    line-height: 1;
+  }
+
+  .metric-cell-val.placeholder {
+    color: var(--g5);
+    font-size: 24px;
+  }
+
+  .metric-cell-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* 3D graph placeholder */
+  .graph-3d-placeholder {
+    background: var(--g2);
+    border: 1px solid var(--g4);
+    height: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  /* animated fake trajectory */
+  .traj-canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .graph-label {
+    position: relative;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  .graph-placeholder-tag {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--acid-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--g3);
+    padding: 4px 8px;
+    border: 1px solid var(--wire);
+  }
+
+  .graph-axis-tag {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+  }
+
+  /* AI overview placeholder */
+  .ai-box {
+    background: var(--g2);
+    border: 1px solid var(--g4);
+    padding: 20px 24px;
+    position: relative;
+  }
+
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--g4);
+  }
+
+  .ai-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    background: var(--acid-faint);
+    border: 1px solid var(--wire);
+    color: var(--acid-dim);
+  }
+
+  .ai-model-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    margin-left: auto;
+  }
+
+  .ai-lorem p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.75;
+    margin-bottom: 10px;
+  }
+
+  .ai-lorem p:last-child { margin-bottom: 0; }
+
+  .ai-lorem .placeholder-line {
+    height: 11px;
+    background: var(--g3);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ai-lorem .placeholder-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 30%, rgba(57,255,110,0.04) 50%, transparent 70%);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+  }
+
+  .ai-anomaly-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--g4);
+  }
+
+  .anomaly-chip {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chip-pending  { color: var(--text-faint); border-color: var(--g4); }
+  .chip-ok       { color: var(--acid-dim);   border-color: var(--wire); background: var(--acid-faint); }
+  .chip-warn     { color: var(--warn);        border-color: rgba(255,164,32,0.3); background: rgba(255,164,32,0.05); }
+
+  .chip-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* ── sidebar ── */
+  .dash-sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar-head {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--g3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .sidebar-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--acid-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .sidebar-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .sidebar-empty-icon {
+    opacity: 0.2;
+  }
+
+  .sidebar-empty-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+
+  .session-card {
+    border-bottom: 1px solid var(--g3);
+    overflow: hidden;
+    transition: background 0.15s;
+  }
+
+  .session-card:hover { background: var(--g2); }
+
+  .session-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .session-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--acid-dim);
+    flex-shrink: 0;
+  }
+
+  .session-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .session-time {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  .session-chevron {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+
+  .session-card.expanded .session-chevron { transform: rotate(90deg); }
+
+  .session-body {
+    display: none;
+    padding: 0 20px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .session-card.expanded .session-body { display: flex; }
+
+  .session-mini-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--g3);
+  }
+
+  .mini-metric {
+    background: var(--g2);
+    padding: 10px 12px;
+  }
+
+  .mini-metric-val {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--acid);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .mini-metric-val.ph { color: var(--g5); font-size: 14px; }
+
+  .mini-metric-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* mini graph placeholder */
+  .mini-graph {
+    height: 60px;
+    background: var(--g3);
+    border: 1px solid var(--g4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .session-open-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--acid-dim);
+    text-decoration: none;
+    padding: 7px 12px;
+    border: 1px solid var(--wire);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    background: var(--acid-faint);
+    justify-content: center;
+  }
+
+  .session-open-btn:hover { color: var(--acid); border-color: var(--acid-dim); }
+
+  /* empty / no session state for main area */
+  .dash-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 60px 32px;
+    text-align: center;
+  }
+
+  .dash-empty-falcon {
+    opacity: 0.06;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
+  }
+
+  .dash-empty-title {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .dash-empty-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 900px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .dash-sidebar { border-top: 1px solid var(--g3); }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+  <!-- top bar -->
+  <div class="dash-topbar">
+    <div class="dash-breadcrumb">
+      FALCONS &nbsp;/&nbsp; DASHBOARD
+      {% if session %}
+        &nbsp;/&nbsp; <span>{{ session.label }}</span>
+      {% endif %}
+    </div>
+    <div class="dash-topbar-actions">
+      <a href="/upload" class="btn-sm">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M5 1 L5 7 M3 3 L5 1 L7 3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 8 L9 8" stroke-linecap="round"/>
+        </svg>
+        Upload New
+      </a>
+    </div>
+  </div>
+
+  <!-- main panel -->
+  <div class="dash-main">
+
+    {% if session %}
+      <!-- ── ACTIVE SESSION ── -->
+
+      <div class="dash-section-head">
+        <span class="dash-section-title">Active Mission</span>
+        <span class="dash-section-file">{{ session.filename }}</span>
+      </div>
+
+      <!-- metrics -->
+      <div class="metrics-row">
+        <div class="metric-cell">
+          <div class="metric-cell-val placeholder">—</div>
+          <div class="metric-cell-label">Duration (s)</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-cell-val placeholder">—</div>
+          <div class="metric-cell-label">Distance (m)</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-cell-val placeholder">—</div>
+          <div class="metric-cell-label">Max Speed (m/s)</div>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-cell-val placeholder">—</div>
+          <div class="metric-cell-label">Max Altitude (m)</div>
+        </div>
+      </div>
+
+      <!-- 3D graph placeholder -->
+      <div>
+        <div class="dash-section-head">
+          <span class="dash-section-title">3D Trajectory — ENU Space</span>
+        </div>
+        <div class="graph-3d-placeholder bracketed">
+          <canvas class="traj-canvas" id="trajCanvas"></canvas>
+          <div class="graph-placeholder-tag">3D · ENU · PLACEHOLDER</div>
+          <div class="graph-axis-tag" style="bottom:14px;left:14px">E →</div>
+          <div class="graph-axis-tag" style="bottom:14px;right:14px">N ↑</div>
+          <div class="graph-axis-tag" style="top:14px;right:14px">U ↑</div>
+          <div class="graph-label">
+            Plotly 3D graph renders here<br>
+            <span style="color:var(--text-faint);font-size:10px">connect visualization.py → build_3d_plot(df_enu)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- altitude profile placeholder -->
+      <div>
+        <div class="dash-section-head">
+          <span class="dash-section-title">Altitude Profile</span>
+        </div>
+        <div class="placeholder-block bracketed" style="height:120px">
+          <canvas id="altCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+          <div class="graph-placeholder-tag">ALTITUDE · TIME · PLACEHOLDER</div>
+        </div>
+      </div>
+
+      <!-- AI overview -->
+      <div>
+        <div class="dash-section-head">
+          <span class="dash-section-title">AI Mission Overview</span>
+        </div>
+        <div class="ai-box bracketed">
+          <div class="ai-header">
+            <div class="ai-badge">AI Analysis</div>
+            <div class="ai-model-tag">// LLM OUTPUT PLACEHOLDER</div>
+          </div>
+          <div class="ai-lorem">
+            <div class="placeholder-line" style="width:95%"></div>
+            <div class="placeholder-line" style="width:88%"></div>
+            <div class="placeholder-line" style="width:92%"></div>
+            <div class="placeholder-line" style="width:70%"></div>
+            <div class="placeholder-line" style="width:82%;margin-top:12px"></div>
+            <div class="placeholder-line" style="width:90%"></div>
+            <div class="placeholder-line" style="width:60%"></div>
+          </div>
+          <div class="ai-anomaly-row">
+            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Altitude drop</div>
+            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Speed violation</div>
+            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Signal loss</div>
+            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> IMU spike</div>
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <!-- ── EMPTY STATE ── -->
+      <div class="dash-empty">
+        <svg class="dash-empty-falcon" width="120" height="120" viewBox="0 0 120 120" fill="none">
+          <path d="M60 8 L92 42 L76 42 L100 74 L72 65 L78 108 L60 88 L42 108 L48 65 L20 74 L44 42 L28 42 Z" fill="var(--acid)"/>
+          <circle cx="60" cy="48" r="9" fill="var(--g0)"/>
+        </svg>
+        <div class="dash-empty-title">No Mission Loaded</div>
+        <p class="dash-empty-sub">Upload a .bin flight log to begin analysis</p>
+        <a href="/upload" class="btn btn-primary" style="margin-top:8px">
+          Upload Log
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+
+  <!-- sidebar -->
+  <div class="dash-sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">Session History</span>
+      <span class="sidebar-count" id="sidebarCount">0 flights</span>
+    </div>
+
+    <div id="sidebarEmpty" class="sidebar-empty">
+      <svg class="sidebar-empty-icon" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <path d="M18 3 L28 13 L24 13 L30 21 L22 19 L24 31 L18 26 L12 31 L14 19 L6 21 L12 13 L8 13 Z" fill="var(--acid)"/>
+        <circle cx="18" cy="16" r="3" fill="var(--g0)"/>
+      </svg>
+      <div class="sidebar-empty-text">
+        No previous flights<br>
+        in this session.<br>
+        Upload a log to begin.
+      </div>
+    </div>
+
+    <div id="sidebarList"></div>
+
+    <div style="padding:16px 20px;border-top:1px solid var(--g3);margin-top:auto;flex-shrink:0">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;line-height:1.8">
+        // SESSION DATA ONLY<br>
+        // CLEARED ON PAGE RELOAD<br>
+        // NO PERSISTENT STORAGE
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── sidebar population from sessionStorage ──────────────────────────────────
+function buildSidebar() {
+  const sessions  = Sessions.all();
+  const list      = document.getElementById('sidebarList');
+  const empty     = document.getElementById('sidebarEmpty');
+  const countEl   = document.getElementById('sidebarCount');
+  const currentId = '{{ session.id if session else "" }}';
+
+  countEl.textContent = sessions.length + (sessions.length === 1 ? ' flight' : ' flights');
+
+  if (!sessions.length) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = sessions.map((s, i) => `
+    <div class="session-card ${s.id === currentId ? 'expanded' : ''}" id="sc-${s.id}">
+      <div class="session-card-header" onclick="toggleSession('${s.id}')">
+        <div class="session-dot" style="${s.id === currentId ? 'background:var(--acid)' : ''}"></div>
+        <span class="session-name">${s.label || s.filename}</span>
+        <span class="session-time">${s.ts || ''}</span>
+        <svg class="session-chevron" viewBox="0 0 10 10" fill="none" stroke="var(--text-faint)" stroke-width="1.2">
+          <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="session-body">
+        <div class="session-mini-metrics">
+          <div class="mini-metric">
+            <div class="mini-metric-val ph">—</div>
+            <div class="mini-metric-label">Duration</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-metric-val ph">—</div>
+            <div class="mini-metric-label">Distance</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-metric-val ph">—</div>
+            <div class="mini-metric-label">Max speed</div>
+          </div>
+          <div class="mini-metric">
+            <div class="mini-metric-val ph">—</div>
+            <div class="mini-metric-label">Max alt.</div>
+          </div>
+        </div>
+        <div class="mini-graph" id="mg-${s.id}"></div>
+        <a href="/dashboard/${s.id}" class="session-open-btn">
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1 8 L8 1 M4 1 L8 1 L8 5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Open full dashboard
+        </a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSession(id) {
+  const card = document.getElementById('sc-' + id);
+  card.classList.toggle('expanded');
+}
+
+buildSidebar();
+
+
+// ── animated placeholder trajectory (3D projection illusion) ────────────────
+const trajCanvas = document.getElementById('trajCanvas');
+if (trajCanvas) {
+  const ctx = trajCanvas.getContext('2d');
+  let t = 0;
+
+  function resizeTraj() {
+    trajCanvas.width  = trajCanvas.offsetWidth;
+    trajCanvas.height = trajCanvas.offsetHeight;
+  }
+  resizeTraj();
+  window.addEventListener('resize', resizeTraj);
+
+  // Generate a fake 3D-ish flight path using parametric curves
+  function drawTraj() {
+    const W = trajCanvas.width, H = trajCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const pts = 120;
+    const cx = W / 2, cy = H / 2;
+
+    ctx.beginPath();
+    for (let i = 0; i < pts; i++) {
+      const frac = i / pts;
+      const angle = frac * Math.PI * 3 + t * 0.3;
+      const r = 60 + frac * 80;
+      const x = cx + Math.cos(angle) * r * 1.4;
+      const y = cy + Math.sin(angle) * r * 0.5 - frac * H * 0.25;
+      const alpha = 0.08 + frac * 0.25;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.strokeStyle = `rgba(57,255,110,0.35)`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // start/end dots
+    const startA = t * 0.3;
+    const sx = cx + Math.cos(startA) * 60 * 1.4;
+    const sy = cy + Math.sin(startA) * 60 * 0.5;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(57,255,110,0.6)';
+    ctx.fill();
+
+    const endA = Math.PI * 3 + t * 0.3;
+    const ex = cx + Math.cos(endA) * 140 * 1.4;
+    const ey = cy + Math.sin(endA) * 140 * 0.5 - H * 0.25;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,69,69,0.6)';
+    ctx.fill();
+
+    // axis lines
+    ctx.strokeStyle = 'rgba(57,255,110,0.08)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(40, H - 40); ctx.lineTo(W - 40, H - 40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, H - 40); ctx.lineTo(40, 30); ctx.stroke();
+    ctx.setLineDash([]);
+
+    t += 0.012;
+    requestAnimationFrame(drawTraj);
+  }
+  drawTraj();
+}
+
+
+// ── altitude profile placeholder ────────────────────────────────────────────
+const altCanvas = document.getElementById('altCanvas');
+if (altCanvas) {
+  const ctx2 = altCanvas.getContext('2d');
+  let t2 = 0;
+
+  function resizeAlt() {
+    altCanvas.width  = altCanvas.offsetWidth;
+    altCanvas.height = altCanvas.offsetHeight;
+  }
+  resizeAlt();
+  window.addEventListener('resize', resizeAlt);
+
+  function drawAlt() {
+    const W = altCanvas.width, H = altCanvas.height;
+    ctx2.clearRect(0, 0, W, H);
+    const pts = W;
+    ctx2.beginPath();
+    for (let i = 0; i < pts; i++) {
+      const x = i;
+      const y = H * 0.6
+        - Math.sin(i * 0.04 + t2) * H * 0.25
+        - Math.sin(i * 0.012 + t2 * 0.5) * H * 0.15;
+      i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+    }
+    ctx2.strokeStyle = 'rgba(57,255,110,0.4)';
+    ctx2.lineWidth = 1.5;
+    ctx2.stroke();
+
+    // fill
+    ctx2.lineTo(pts, H); ctx2.lineTo(0, H); ctx2.closePath();
+    ctx2.fillStyle = 'rgba(57,255,110,0.04)';
+    ctx2.fill();
+
+    t2 += 0.018;
+    requestAnimationFrame(drawAlt);
+  }
+  drawAlt();
+}
+
+
+// ── mini graph sparklines in sidebar ────────────────────────────────────────
+function drawMiniGraph(id) {
+  const el = document.getElementById('mg-' + id);
+  if (!el) return;
+  const canvas = document.createElement('canvas');
+  canvas.width  = el.offsetWidth || 260;
+  canvas.height = 60;
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+  el.style.position = 'relative';
+  el.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const seed = id.charCodeAt(0);
+  ctx.beginPath();
+  for (let i = 0; i < W; i++) {
+    const y = H * 0.5
+      - Math.sin(i * 0.05 + seed) * H * 0.3
+      - Math.sin(i * 0.02 + seed * 0.7) * H * 0.15;
+    i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+  }
+  ctx.strokeStyle = 'rgba(57,255,110,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+Sessions.all().forEach(s => {
+  if (document.getElementById('sc-' + s.id)) drawMiniGraph(s.id);
+});
+</script>
+{% endblock %}

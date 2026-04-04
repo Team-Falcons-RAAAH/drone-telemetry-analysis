@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block title %}Falcons — UAV Telemetry Analyser{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .landing {
+    min-height: calc(100vh - 52px);
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 32px 60px;
+    position: relative;
+  }
+
+  /* big background falcon */
+  .hero-falcon-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -54%);
+    width: min(540px, 80vw);
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--acid-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s forwards;
+  }
+
+  .hero-title span {
+    color: var(--acid);
+    display: block;
+  }
+
+  .hero-subtitle {
+    font-family: var(--display);
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.35s forwards;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto 48px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.45s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.55s forwards;
+  }
+
+  /* decorative horizontal rule with coordinate text */
+  .coord-rule {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 40px;
+    border-top: 1px solid var(--g3);
+    opacity: 0;
+    animation: fadeIn 1s 0.9s forwards;
+  }
+
+  .coord-rule-line {
+    flex: 1;
+    height: 1px;
+    background: var(--g4);
+  }
+
+  .coord-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+
+  /* stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--g3);
+    opacity: 0;
+    animation: fadeIn 0.8s 0.7s forwards;
+  }
+
+  .stat-item {
+    padding: 28px 32px;
+    border-right: 1px solid var(--g3);
+    position: relative;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-item::before {
+    content: attr(data-index);
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+
+  .stat-val {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--acid);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* feature cards row */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--g3);
+  }
+
+  .feature-card {
+    padding: 32px;
+    border-right: 1px solid var(--g3);
+    opacity: 0;
+    animation: fadeUp 0.5s forwards;
+  }
+
+  .feature-card:last-child { border-right: none; }
+  .feature-card:nth-child(1) { animation-delay: 0.6s; }
+  .feature-card:nth-child(2) { animation-delay: 0.72s; }
+  .feature-card:nth-child(3) { animation-delay: 0.84s; }
+
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--wire);
+    background: var(--acid-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .feature-icon svg { width: 18px; height: 18px; }
+
+  .feature-title {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .feature-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.65;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @media (max-width: 700px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .features { grid-template-columns: 1fr; }
+    .stat-item:nth-child(2) { border-right: none; }
+    .feature-card { border-right: none; border-bottom: 1px solid var(--g3); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing">
+  <div class="hero">
+    <!-- ghost falcon watermark -->
+    <svg class="hero-falcon-bg" viewBox="0 0 200 200" fill="none">
+      <path d="M100 10 L155 70 L130 70 L170 125 L115 108 L125 185 L100 148 L75 185 L85 108 L30 125 L70 70 L45 70 Z" fill="var(--acid)"/>
+      <circle cx="100" cy="75" r="14" fill="var(--g0)"/>
+      <path d="M88 72 Q100 65 112 72" stroke="var(--g0)" stroke-width="2" fill="none"/>
+    </svg>
+
+    <div class="hero-inner">
+      <p class="hero-eyebrow">// Team Falcons · UAV Telemetry Suite · v1.0</p>
+
+      <h1 class="hero-title">
+        Flight<br>
+        <span>Analysis</span>
+      </h1>
+
+      <p class="hero-subtitle">Ardupilot Log Processing &amp; 3D Visualisation</p>
+
+      <p class="hero-desc">
+        Parse binary flight logs, reconstruct spatial trajectories in ENU coordinates,
+        compute mission-critical metrics, and get AI-generated flight assessments —
+        all from a single .bin file.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/dashboard" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1" width="5" height="5" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="8" y="1" width="5" height="5" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1" y="8" width="5" height="5" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="8" y="8" width="5" height="5" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+          Dashboard
+        </a>
+        <a href="/upload" class="btn btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1 L7 9 M4 4 L7 1 L10 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 10 L2 12 L12 12 L12 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Upload Log
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- coord decoration -->
+  <div class="coord-rule">
+    <div class="coord-rule-line"></div>
+    <span class="coord-text">WGS-84 → ENU // HAVERSINE // IMU INTEGRATION // AI ANALYSIS</span>
+    <div class="coord-rule-line"></div>
+  </div>
+
+  <!-- stats -->
+  <div class="stats-strip">
+    <div class="stat-item" data-index="01">
+      <div class="stat-val">6 371</div>
+      <div class="stat-label">Earth radius (km)</div>
+    </div>
+    <div class="stat-item" data-index="02">
+      <div class="stat-val">3D</div>
+      <div class="stat-label">Trajectory render</div>
+    </div>
+    <div class="stat-item" data-index="03">
+      <div class="stat-val">ENU</div>
+      <div class="stat-label">Coordinate system</div>
+    </div>
+    <div class="stat-item" data-index="04">
+      <div class="stat-val">AI</div>
+      <div class="stat-label">Mission overview</div>
+    </div>
+  </div>
+
+  <!-- features -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 18 18" fill="none" stroke="var(--acid)" stroke-width="1.2">
+          <path d="M2 14 L2 4 L9 2 L16 4 L16 14 L9 16 Z"/>
+          <circle cx="9" cy="9" r="2"/>
+        </svg>
+      </div>
+      <div class="feature-title">Binary Parsing</div>
+      <p class="feature-desc">Reads raw Ardupilot .bin flight logs and extracts structured GPS and IMU sensor streams.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 18 18" fill="none" stroke="var(--acid)" stroke-width="1.2">
+          <path d="M3 15 L8 7 L12 11 L15 4"/>
+          <circle cx="3" cy="15" r="1.5" fill="var(--acid)"/>
+          <circle cx="15" cy="4" r="1.5" fill="var(--acid)"/>
+        </svg>
+      </div>
+      <div class="feature-title">3D Trajectory</div>
+      <p class="feature-desc">Converts WGS-84 coordinates to local ENU space and renders an interactive 3D flight path.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 18 18" fill="none" stroke="var(--acid)" stroke-width="1.2">
+          <rect x="2" y="5" width="14" height="10" rx="1"/>
+          <path d="M6 5 L6 3 M12 5 L12 3"/>
+          <path d="M5 10 L8 10 M10 10 L13 10 M5 13 L7 13"/>
+        </svg>
+      </div>
+      <div class="feature-title">AI Overview</div>
+      <p class="feature-desc">LLM-generated mission assessment — detects anomalies, altitude drops, and speed violations.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Animate stats on scroll (simple IntersectionObserver)
+  const stats = document.querySelectorAll('.stat-item');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+  stats.forEach((s, i) => {
+    s.style.opacity = '0';
+    s.style.transform = 'translateY(12px)';
+    s.style.transition = `opacity 0.4s ${i * 0.08}s, transform 0.4s ${i * 0.08}s`;
+    io.observe(s);
+  });
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 import pandas as pd
 from pymavlink import mavutil
-file_pass = 'C:\\Users\\user\\Documents\\Uni\\СTF\\01.04.26\\codeDay1\\00000001.BIN'
+
 class parser:
     @staticmethod
     def gpsData(file_path):
@@ -25,7 +25,6 @@ class parser:
                 'status': msg.Status,   # опціонально, для дебагу
                 'nsats': msg.NSats,     # опціонально, для дебагу
             })
-
         df_gps = pd.DataFrame(gps_records)
         return df_gps
     @staticmethod
@@ -46,7 +45,3 @@ class parser:
         df_imu = pd.DataFrame(imu_records)
         df_imu['dt'] = df_imu['timestamp'].diff().fillna(0)
         return df_imu
-df = pd.DataFrame(parser.gpsData(file_pass))
-
-# Save to CSV
-df.to_csv('my_data.csv', index=False)

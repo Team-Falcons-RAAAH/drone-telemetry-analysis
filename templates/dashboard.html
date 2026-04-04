@@ -527,7 +527,7 @@
 
 {% block scripts %}
 <script>
-// ── sidebar ───────────────────────────────────────────────────────────────────
+  // ── sidebar ───────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const sessions  = Sessions.all();
   const list      = document.getElementById('sidebarList');
@@ -581,10 +581,23 @@ let plotInitialised = false;
 
 function initPlot() {
   if (!plotData || !plotData.E) return;
+
+  const E = plotData.E;
+  const N = plotData.N;
+  const U = plotData.U;
+
   const el = document.getElementById('plot3d');
   if (!el) return;
 
-  const traces = [
+  // ── LOCK RANGES (prevents zoom jumping) ────────────────────────────────────
+  const xMin = Math.min(...E), xMax = Math.max(...E);
+  const yMin = Math.min(...N), yMax = Math.max(...N);
+  const zMin = Math.min(...U), zMax = Math.max(...U);
+
+  const colorData = plotData.spd.length ? plotData.spd : U;
+
+  // ── INITIAL TRACES ─────────────────────────────────────────────────────────
+ const traces = [
     {
       type: 'scatter3d', mode: 'lines',
       x: plotData.E, y: plotData.N, z: plotData.U,
@@ -603,7 +616,15 @@ function initPlot() {
     {
       type: 'scatter3d', mode: 'markers+text',
       x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
-      marker: { size: 7, color: '#39ff6e' },
+      marker: { size: 7, color: '#F0F24B' },
+      text: ['Current'], textposition: 'top center',
+      textfont: { color: '#F0F24B', size: 11 },
+      showlegend: false,
+    },
+    {
+      type: 'scatter3d', mode: 'markers+text',
+      x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
+      marker: { size: 7, color: '#' },
       text: ['Takeoff'], textposition: 'top center',
       textfont: { color: '#39ff6e', size: 11 },
       showlegend: false,
@@ -618,10 +639,41 @@ function initPlot() {
     },
   ];
 
+  // ── FRAMES (animation) ─────────────────────────────────────────────────────
+  const frames = [];
+  const step = 2; // smoother motion (lower = smoother)
+
+  for (let i = 1; i < E.length; i += step) {
+    frames.push({
+      name: String(i),
+      data: [
+        {
+          x: E.slice(0, i),
+          y: N.slice(0, i),
+          z: U.slice(0, i),
+          line: {
+            color: plotData.spd.length ? plotData.spd : plotData.U,
+            colorscale: 'Viridis',
+            width: 4
+          }
+        },
+        {
+          x: [E[i]],
+          y: [N[i]],
+          z: [U[i]]
+        }
+      ]
+    });
+  }
+
+  // ── LAYOUT ─────────────────────────────────────────────────────────────────
   const layout = {
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor:  'rgba(0,0,0,0)',
     margin: { l: 0, r: 0, t: 0, b: 0 },
+
+    uirevision: 'lock-camera',
+
     scene: {
       bgcolor: 'rgba(14,19,24,1)',
       camera: { eye: { x: 1.4, y: 1.4, z: 1.0 } },
@@ -629,11 +681,57 @@ function initPlot() {
       yaxis: { title: 'North (m)', tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
       zaxis: { title: 'Alt (m)',   tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
       aspectmode: 'data',
+      // aspectratio: { x: 1, y: 1, z: 0.7 }
     },
-    legend: { font: { color: '#a0a8b8' } },
+    legend: { font: { color: '#a0a8b8' },
+    },
+
+    // ── CONTROLS ─────────────────────────────────────────────────────────────
+    updatemenus: [
+      {
+        type: 'buttons',
+        showactive: false,
+        x: 0.1,
+        y: 1.0,
+        buttons: [
+          {
+            label: 'Play',
+            method: 'animate',
+            args: [null, {
+              frame: { duration: 40, redraw: true }, // cinematic speed
+              transition: { duration: 0 },
+              fromcurrent: true,
+              mode: 'immediate'
+            }]
+          },
+          {
+            label: 'Pause',
+            method: 'animate',
+            args: [[null], {
+              frame: { duration: 0 },
+              mode: 'immediate'
+            }]
+          }
+        ]
+      }
+    ]
   };
 
-  Plotly.newPlot('plot3d', traces, layout, { responsive: true, displaylogo: false });
+  // ── INIT + LOAD FRAMES ─────────────────────────────────────────────────────
+  Plotly.newPlot('plot3d', traces, layout, {
+    responsive: true,
+    displaylogo: false
+  }).then(() => {
+    Plotly.addFrames('plot3d', frames);
+
+    // ── AUTO PLAY (cinematic) ────────────────────────────────────────────────
+    Plotly.animate('plot3d', null, {
+      frame: { duration: 40, redraw: true },
+      transition: { duration: 0 },
+      fromcurrent: true
+    });
+  });
+
   plotInitialised = true;
 }
 

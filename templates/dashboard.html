@@ -4,101 +4,104 @@
 {% block extra_styles %}
 <style>
   .dashboard {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    grid-template-rows: auto 1fr;
-    min-height: calc(100vh - 52px);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px);
+    overflow: hidden;
   }
 
-  /* ── top bar ── */
+  /* top bar */
   .dash-topbar {
-    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 20px;
-    padding: 18px 32px;
+    padding: 16px 28px;
     border-bottom: 1px solid var(--g3);
     background: var(--g1);
+    flex-shrink: 0;
   }
 
   .dash-breadcrumb {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-dim);
     letter-spacing: 0.08em;
     display: flex;
     align-items: center;
     gap: 8px;
   }
-
   .dash-breadcrumb span { color: var(--acid); }
 
-  .dash-topbar-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 8px;
-  }
+  .dash-topbar-actions { margin-left: auto; display: flex; gap: 8px; }
 
   .btn-sm {
     font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    padding: 7px 16px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 10px 22px;
     text-decoration: none;
-    border: 1px solid var(--g5);
-    color: var(--text-dim);
-    background: transparent;
+    border: 1px solid var(--acid-dim);
+    color: var(--acid);
+    background: var(--acid-faint);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-sm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(57,255,110,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+  .btn-sm:hover::before { transform: translateX(100%); }
+  .btn-sm:hover { color: var(--acid); border-color: var(--acid); background: rgba(57,255,110,0.12); box-shadow: 0 0 12px rgba(57,255,110,0.15); }
+
+  /* ── three-column body ── */
+  .dash-body {
+    display: grid;
+    grid-template-columns: 340px 1fr 360px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  .btn-sm:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
-
-  /* ── main content ── */
-  .dash-main {
-    padding: 28px 32px;
-    overflow-y: auto;
+  /* ── LEFT: metrics + altitude + AI ── */
+  .dash-left {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 0;
     border-right: 1px solid var(--g3);
+    overflow-y: auto;
   }
 
-  .dash-section-head {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 16px;
+  .left-section {
+    padding: 20px 20px;
+    border-bottom: 1px solid var(--g3);
   }
 
-  .dash-section-title {
-    font-family: var(--display);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  .dash-section-file {
+  .section-label {
     font-family: var(--mono);
-    font-size: 11px;
-    color: var(--acid);
-    letter-spacing: 0.04em;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
   }
 
-  /* metrics row */
-  .metrics-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+  /* metric cells stacked vertically */
+  .metrics-stack {
+    display: flex;
+    flex-direction: column;
     gap: 1px;
     background: var(--g3);
     border: 1px solid var(--g3);
-    margin-bottom: 24px;
   }
 
   .metric-cell {
@@ -106,105 +109,70 @@
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
   }
 
   .metric-cell-val {
     font-family: var(--display);
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--acid);
     line-height: 1;
   }
-
-  .metric-cell-val.placeholder {
-    color: var(--g5);
-    font-size: 24px;
-  }
+  .metric-cell-val.placeholder { color: var(--g5); font-size: 24px; }
 
   .metric-cell-label {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
-  /* 3D graph placeholder */
-  .graph-3d-placeholder {
+  /* altitude profile */
+  .alt-wrap {
+    position: relative;
+    height: 160px;
     background: var(--g2);
     border: 1px solid var(--g4);
-    height: 340px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 24px;
+    cursor: crosshair;
   }
 
-  /* animated fake trajectory */
-  .traj-canvas {
+  #altProfile { width: 100%; height: 100%; display: block; }
+
+  .alt-tooltip {
     position: absolute;
-    inset: 0;
-  }
-
-  .graph-label {
-    position: relative;
-    z-index: 2;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-faint);
-    letter-spacing: 0.08em;
-    text-align: center;
-  }
-
-  .graph-placeholder-tag {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--acid-dim);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    display: none;
     background: var(--g3);
-    padding: 4px 8px;
-    border: 1px solid var(--wire);
-  }
-
-  .graph-axis-tag {
-    position: absolute;
+    border: 1px solid var(--acid-dim);
+    padding: 5px 9px;
     font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text-faint);
-    letter-spacing: 0.06em;
+    font-size: 10px;
+    color: var(--acid);
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
   }
 
-  /* AI overview placeholder */
-  .ai-box {
-    background: var(--g2);
-    border: 1px solid var(--g4);
-    padding: 20px 24px;
-    position: relative;
-  }
+  /* AI box */
+  .ai-box { background: var(--g2); border: 1px solid var(--g4); padding: 16px 18px; }
 
   .ai-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    padding-bottom: 14px;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--g4);
   }
 
   .ai-badge {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 4px 8px;
+    padding: 4px 9px;
     background: var(--acid-faint);
     border: 1px solid var(--wire);
     color: var(--acid-dim);
@@ -214,49 +182,28 @@
     font-family: var(--mono);
     font-size: 10px;
     color: var(--text-faint);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     margin-left: auto;
   }
 
-  .ai-lorem p {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.75;
-    margin-bottom: 10px;
-  }
-
-  .ai-lorem p:last-child { margin-bottom: 0; }
-
-  .ai-lorem .placeholder-line {
-    height: 11px;
+  .placeholder-line {
+    height: 10px;
     background: var(--g3);
     border-radius: 2px;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
     position: relative;
     overflow: hidden;
   }
-
-  .ai-lorem .placeholder-line::after {
+  .placeholder-line::after {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, transparent 30%, rgba(57,255,110,0.04) 50%, transparent 70%);
     animation: shimmer 2s infinite;
   }
+  @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
 
-  @keyframes shimmer {
-    from { transform: translateX(-100%); }
-    to   { transform: translateX(100%); }
-  }
-
-  .ai-anomaly-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--g4);
-  }
+  .ai-anomaly-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--g4); }
 
   .anomaly-chip {
     font-family: var(--mono);
@@ -269,27 +216,162 @@
     align-items: center;
     gap: 5px;
   }
+  .chip-pending { color: var(--text-faint); border-color: var(--g4); }
+  .chip-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-  .chip-pending  { color: var(--text-faint); border-color: var(--g4); }
-  .chip-ok       { color: var(--acid-dim);   border-color: var(--wire); background: var(--acid-faint); }
-  .chip-warn     { color: var(--warn);        border-color: rgba(255,164,32,0.3); background: rgba(255,164,32,0.05); }
-
-  .chip-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
+  /* ── CENTRE: 3D plot, full height ── */
+  .dash-centre {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--g3);
+    overflow: hidden;
   }
 
-  /* ── sidebar ── */
+  .plot-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--g3);
+    background: var(--g1);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .plot-title {
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-right: auto;
+  }
+
+  /* ── anim buttons ── */
+  .anim-controls { display: flex; gap: 3px; }
+
+  .anim-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 11px;
+    border: 1px solid var(--g4);
+    color: var(--text-dim);
+    background: var(--g2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .anim-btn:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+
+  .anim-play.active  { color: var(--acid); border-color: var(--acid); background: var(--acid-faint); box-shadow: 0 0 8px rgba(57,255,110,0.15); }
+  .anim-pause.active { color: #f0c040;     border-color: rgba(240,192,64,0.5); background: rgba(240,192,64,0.06); }
+  .anim-reset { }
+  .anim-reset:hover  { color: #ff6060; border-color: rgba(255,96,96,0.5); background: rgba(255,96,96,0.06); }
+
+  .view-btns { display: flex; gap: 3px; }
+
+  .view-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--g4);
+    color: var(--text-dim);
+    background: var(--g2);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .view-btn:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+  .view-btn.active {
+    color: var(--acid);
+    border-color: var(--acid);
+    background: var(--acid-faint);
+    box-shadow: 0 0 8px rgba(57,255,110,0.12), inset 0 0 8px rgba(57,255,110,0.04);
+  }
+  .view-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 1px;
+    background: var(--acid);
+    box-shadow: 0 0 6px var(--acid);
+  }
+
+  /* ── speed slider ── */
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
+  }
+  .speed-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .speed-val {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--acid);
+    min-width: 28px;
+    text-align: right;
+  }
+  #speedSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 90px;
+    height: 2px;
+    background: var(--g4);
+    outline: none;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  #speedSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    background: var(--acid);
+    cursor: pointer;
+    border-radius: 0;
+    box-shadow: 0 0 6px rgba(57,255,110,0.4);
+    transition: box-shadow 0.15s;
+  }
+  #speedSlider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 10px rgba(57,255,110,0.7);
+  }
+  #speedSlider::-moz-range-thumb {
+    width: 10px; height: 10px;
+    background: var(--acid);
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+    box-shadow: 0 0 6px rgba(57,255,110,0.4);
+  }
+  #speedSlider::-webkit-slider-runnable-track { background: var(--g4); height: 2px; }
+  #speedSlider::-moz-range-track { background: var(--g4); height: 2px; }
+
+  #plot3d { flex: 1; min-height: 0; }
+
+  /* ── RIGHT: session history ── */
   .dash-sidebar {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .sidebar-head {
-    padding: 20px 20px 14px;
+    padding: 16px 18px 12px;
     border-bottom: 1px solid var(--g3);
     display: flex;
     align-items: center;
@@ -299,7 +381,7 @@
 
   .sidebar-title {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -307,25 +389,24 @@
 
   .sidebar-count {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--acid-dim);
     letter-spacing: 0.06em;
   }
 
+  .sidebar-scroll { flex: 1; overflow-y: auto; }
+
   .sidebar-empty {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 32px 20px;
+    padding: 40px 20px;
     text-align: center;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .sidebar-empty-icon {
-    opacity: 0.2;
-  }
+  .sidebar-empty-icon { opacity: 0.2; }
 
   .sidebar-empty-text {
     font-family: var(--mono);
@@ -335,33 +416,23 @@
     line-height: 1.8;
   }
 
-  .session-card {
-    border-bottom: 1px solid var(--g3);
-    overflow: hidden;
-    transition: background 0.15s;
-  }
-
+  .session-card { border-bottom: 1px solid var(--g3); transition: background 0.15s; }
   .session-card:hover { background: var(--g2); }
 
   .session-card-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 12px 18px;
     cursor: pointer;
     user-select: none;
   }
 
-  .session-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--acid-dim);
-    flex-shrink: 0;
-  }
+  .session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--acid-dim); flex-shrink: 0; }
 
   .session-name {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text);
     letter-spacing: 0.04em;
     flex: 1;
@@ -370,70 +441,34 @@
     white-space: nowrap;
   }
 
-  .session-time {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text-faint);
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-  }
-
-  .session-chevron {
-    width: 10px;
-    height: 10px;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-  }
-
+  .session-time { font-family: var(--mono); font-size: 10px; color: var(--text-faint); flex-shrink: 0; }
+  .session-chevron { width: 10px; height: 10px; flex-shrink: 0; transition: transform 0.2s; }
   .session-card.expanded .session-chevron { transform: rotate(90deg); }
 
-  .session-body {
-    display: none;
-    padding: 0 20px 16px;
-    flex-direction: column;
-    gap: 10px;
-  }
-
+  .session-body { display: none; padding: 0 18px 14px; flex-direction: column; gap: 8px; }
   .session-card.expanded .session-body { display: flex; }
 
-  .session-mini-metrics {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--g3);
-  }
+  .session-mini-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--g3); }
+  .mini-metric { background: var(--g2); padding: 10px 12px; }
+  .mini-metric-val { font-family: var(--display); font-size: 18px; font-weight: 700; color: var(--acid); line-height: 1; margin-bottom: 3px; }
+  .mini-metric-val.ph { color: var(--g5); font-size: 15px; }
+  .mini-metric-label { font-family: var(--mono); font-size: 9px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; }
 
-  .mini-metric {
+  /* altitude profile inside expanded session card */
+  .session-alt-wrap {
+    position: relative;
+    height: 80px;
     background: var(--g2);
-    padding: 10px 12px;
+    border: 1px solid var(--g4);
   }
-
-  .mini-metric-val {
-    font-family: var(--display);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--acid);
-    line-height: 1;
-    margin-bottom: 3px;
-  }
-
-  .mini-metric-val.ph { color: var(--g5); font-size: 14px; }
-
-  .mini-metric-label {
+  .session-alt-label {
     font-family: var(--mono);
     font-size: 8px;
     color: var(--text-faint);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-  }
-
-  /* mini graph placeholder */
-  .mini-graph {
-    height: 60px;
-    background: var(--g3);
-    border: 1px solid var(--g4);
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 5px;
+    margin-top: 2px;
   }
 
   .session-open-btn {
@@ -443,19 +478,24 @@
     text-transform: uppercase;
     color: var(--acid-dim);
     text-decoration: none;
-    padding: 7px 12px;
+    padding: 6px 10px;
     border: 1px solid var(--wire);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     transition: all 0.15s;
     background: var(--acid-faint);
     justify-content: center;
   }
-
   .session-open-btn:hover { color: var(--acid); border-color: var(--acid-dim); }
 
-  /* empty / no session state for main area */
+  .sidebar-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--g3);
+    flex-shrink: 0;
+  }
+
+  /* empty state (no session loaded) */
   .dash-empty {
     flex: 1;
     display: flex;
@@ -466,38 +506,10 @@
     padding: 60px 32px;
     text-align: center;
   }
-
-  .dash-empty-falcon {
-    opacity: 0.06;
-    animation: float 4s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-10px); }
-  }
-
-  .dash-empty-title {
-    font-family: var(--display);
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  .dash-empty-sub {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-faint);
-    letter-spacing: 0.06em;
-  }
-
-  @media (max-width: 900px) {
-    .dashboard { grid-template-columns: 1fr; }
-    .dash-sidebar { border-top: 1px solid var(--g3); }
-    .metrics-row { grid-template-columns: repeat(2, 1fr); }
-  }
+  .dash-empty-falcon { opacity: 0.06; animation: float 4s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .dash-empty-title { font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim); }
+  .dash-empty-sub { font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.06em; }
 </style>
 {% endblock %}
 
@@ -508,9 +520,7 @@
   <div class="dash-topbar">
     <div class="dash-breadcrumb">
       FALCONS &nbsp;/&nbsp; DASHBOARD
-      {% if session %}
-        &nbsp;/&nbsp; <span>{{ session.label }}</span>
-      {% endif %}
+      {% if session %}&nbsp;/&nbsp; <span>{{ session.label }}</span>{% endif %}
     </div>
     <div class="dash-topbar-actions">
       <a href="/upload" class="btn-sm">
@@ -523,139 +533,152 @@
     </div>
   </div>
 
-  <!-- main panel -->
-  <div class="dash-main">
+  <div class="dash-body">
 
-    {% if session %}
-      <!-- ── ACTIVE SESSION ── -->
+    <!-- ── LEFT: metrics / altitude / AI ── -->
+    <div class="dash-left">
+      {% if session %}
 
-      <div class="dash-section-head">
-        <span class="dash-section-title">Active Mission</span>
-        <span class="dash-section-file">{{ session.filename }}</span>
-      </div>
-
-      <!-- metrics -->
-      <div class="metrics-row">
-        <div class="metric-cell">
-          <div class="metric-cell-val placeholder">—</div>
-          <div class="metric-cell-label">Duration (s)</div>
-        </div>
-        <div class="metric-cell">
-          <div class="metric-cell-val placeholder">—</div>
-          <div class="metric-cell-label">Distance (m)</div>
-        </div>
-        <div class="metric-cell">
-          <div class="metric-cell-val placeholder">—</div>
-          <div class="metric-cell-label">Max Speed (m/s)</div>
-        </div>
-        <div class="metric-cell">
-          <div class="metric-cell-val placeholder">—</div>
-          <div class="metric-cell-label">Max Altitude (m)</div>
-        </div>
-      </div>
-
-      <!-- 3D trajectory graph -->
-      <div>
-        <div class="dash-section-head">
-          <span class="dash-section-title">3D Trajectory — ENU Space</span>
-        </div>
-        <div class="bracketed" style="background:var(--g2);border:1px solid var(--g4);height:380px;position:relative;">
-          <div id="plot3d" style="width:100%;height:100%;"></div>
-        </div>
-      </div>
-
-      <!-- altitude profile placeholder -->
-      <div>
-        <div class="dash-section-head">
-          <span class="dash-section-title">Altitude Profile</span>
-        </div>
-        <div class="placeholder-block bracketed" style="height:120px">
-          <canvas id="altCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
-          <div class="graph-placeholder-tag">ALTITUDE · TIME · PLACEHOLDER</div>
-        </div>
-      </div>
-
-      <!-- AI overview -->
-      <div>
-        <div class="dash-section-head">
-          <span class="dash-section-title">AI Mission Overview</span>
-        </div>
-        <div class="ai-box bracketed">
-          <div class="ai-header">
-            <div class="ai-badge">AI Analysis</div>
-            <div class="ai-model-tag">// LLM OUTPUT PLACEHOLDER</div>
-          </div>
-          <div class="ai-lorem">
-            <div class="placeholder-line" style="width:95%"></div>
-            <div class="placeholder-line" style="width:88%"></div>
-            <div class="placeholder-line" style="width:92%"></div>
-            <div class="placeholder-line" style="width:70%"></div>
-            <div class="placeholder-line" style="width:82%;margin-top:12px"></div>
-            <div class="placeholder-line" style="width:90%"></div>
-            <div class="placeholder-line" style="width:60%"></div>
-          </div>
-          <div class="ai-anomaly-row">
-            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Altitude drop</div>
-            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Speed violation</div>
-            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Signal loss</div>
-            <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> IMU spike</div>
+        <div class="left-section">
+          <div class="section-label">Mission — {{ session.filename }}</div>
+          <div class="metrics-stack">
+            <div class="metric-cell">
+              <div class="metric-cell-val placeholder">—</div>
+              <div class="metric-cell-label">Duration (s)</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-cell-val placeholder">—</div>
+              <div class="metric-cell-label">Distance (m)</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-cell-val placeholder">—</div>
+              <div class="metric-cell-label">Max Speed (m/s)</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-cell-val placeholder">—</div>
+              <div class="metric-cell-label">Max Altitude (m)</div>
+            </div>
           </div>
         </div>
+
+        <div class="left-section">
+          <div class="section-label">Altitude Profile</div>
+          <div class="alt-wrap bracketed">
+            <canvas id="altProfile"></canvas>
+            <div class="alt-tooltip" id="altTooltip"></div>
+          </div>
+        </div>
+
+        <div class="left-section" style="border-bottom:none;flex:1">
+          <div class="section-label">AI Mission Overview</div>
+          <div class="ai-box bracketed">
+            <div class="ai-header">
+              <div class="ai-badge">AI Analysis</div>
+              <div class="ai-model-tag">// LLM PLACEHOLDER</div>
+            </div>
+            <div>
+              <div class="placeholder-line" style="width:95%"></div>
+              <div class="placeholder-line" style="width:88%"></div>
+              <div class="placeholder-line" style="width:92%"></div>
+              <div class="placeholder-line" style="width:70%"></div>
+              <div class="placeholder-line" style="width:85%;margin-top:10px"></div>
+              <div class="placeholder-line" style="width:60%"></div>
+            </div>
+            <div class="ai-anomaly-row">
+              <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Altitude drop</div>
+              <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> Speed violation</div>
+              <div class="anomaly-chip chip-pending"><span class="chip-dot"></span> IMU spike</div>
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <div class="dash-empty">
+          <svg class="dash-empty-falcon" width="100" height="100" viewBox="0 0 120 120" fill="none">
+            <path d="M60 8 L92 42 L76 42 L100 74 L72 65 L78 108 L60 88 L42 108 L48 65 L20 74 L44 42 L28 42 Z" fill="var(--acid)"/>
+            <circle cx="60" cy="48" r="9" fill="var(--g0)"/>
+          </svg>
+          <div class="dash-empty-title">No Mission</div>
+          <p class="dash-empty-sub">Upload a .bin log to begin</p>
+          <a href="/upload" class="btn btn-primary" style="margin-top:8px">Upload Log</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ── CENTRE: full-height 3D plot ── -->
+    <div class="dash-centre">
+      <div class="plot-head">
+        <span class="plot-title">3D Trajectory — ENU Space</span>
+        <div class="anim-controls">
+          <button class="anim-btn anim-play active" id="btnPlay" onclick="animPlay()">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor"><path d="M1 1 L8 5 L1 9 Z"/></svg>
+            Play
+          </button>
+          <button class="anim-btn anim-pause" id="btnPause" onclick="animPause()">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor"><rect x="1" y="1" width="2.5" height="8"/><rect x="5.5" y="1" width="2.5" height="8"/></svg>
+            Pause
+          </button>
+          <button class="anim-btn anim-reset" id="btnReset" onclick="animReset()">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 5 A4 4 0 1 1 4 1.3" stroke-linecap="round"/><path d="M1 1.5 L1 5 L4.5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reset
+          </button>
+        </div>
+        <div class="speed-control">
+          <span class="speed-label">Speed</span>
+          <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+          <span class="speed-val" id="speedVal">5×</span>
+        </div>
+        <div class="view-btns">
+          <button class="view-btn" onclick="setView('top',this)">Top</button>
+          <button class="view-btn" onclick="setView('front',this)">Front</button>
+          <button class="view-btn" onclick="setView('side',this)">Side</button>
+          <button class="view-btn active" onclick="setView('free',this)">Free</button>
+        </div>
+      </div>
+      <div id="plot3d"></div>
+    </div>
+
+    <!-- ── RIGHT: session history ── -->
+    <div class="dash-sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Session History</span>
+        <span class="sidebar-count" id="sidebarCount">0 flights</span>
       </div>
 
-    {% else %}
-      <!-- ── EMPTY STATE ── -->
-      <div class="dash-empty">
-        <svg class="dash-empty-falcon" width="120" height="120" viewBox="0 0 120 120" fill="none">
-          <path d="M60 8 L92 42 L76 42 L100 74 L72 65 L78 108 L60 88 L42 108 L48 65 L20 74 L44 42 L28 42 Z" fill="var(--acid)"/>
-          <circle cx="60" cy="48" r="9" fill="var(--g0)"/>
-        </svg>
-        <div class="dash-empty-title">No Mission Loaded</div>
-        <p class="dash-empty-sub">Upload a .bin flight log to begin analysis</p>
-        <a href="/upload" class="btn btn-primary" style="margin-top:8px">
-          Upload Log
-        </a>
+      <div class="sidebar-scroll">
+        <div id="sidebarEmpty" class="sidebar-empty">
+          <svg class="sidebar-empty-icon" width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <path d="M18 3 L28 13 L24 13 L30 21 L22 19 L24 31 L18 26 L12 31 L14 19 L6 21 L12 13 L8 13 Z" fill="var(--acid)"/>
+            <circle cx="18" cy="16" r="3" fill="var(--g0)"/>
+          </svg>
+          <div class="sidebar-empty-text">No previous flights<br>in this session.<br>Upload a log to begin.</div>
+        </div>
+        <div id="sidebarList"></div>
       </div>
-    {% endif %}
+
+      <div class="sidebar-footer">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;line-height:1.8">
+          // SESSION DATA ONLY<br>
+          // CLEARED ON PAGE RELOAD<br>
+          // NO PERSISTENT STORAGE
+        </div>
+      </div>
+    </div>
 
   </div>
-
-  <!-- sidebar -->
-  <div class="dash-sidebar">
-    <div class="sidebar-head">
-      <span class="sidebar-title">Session History</span>
-      <span class="sidebar-count" id="sidebarCount">0 flights</span>
-    </div>
-
-    <div id="sidebarEmpty" class="sidebar-empty">
-      <svg class="sidebar-empty-icon" width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M18 3 L28 13 L24 13 L30 21 L22 19 L24 31 L18 26 L12 31 L14 19 L6 21 L12 13 L8 13 Z" fill="var(--acid)"/>
-        <circle cx="18" cy="16" r="3" fill="var(--g0)"/>
-      </svg>
-      <div class="sidebar-empty-text">
-        No previous flights<br>
-        in this session.<br>
-        Upload a log to begin.
-      </div>
-    </div>
-
-    <div id="sidebarList"></div>
-
-    <div style="padding:16px 20px;border-top:1px solid var(--g3);margin-top:auto;flex-shrink:0">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;line-height:1.8">
-        // SESSION DATA ONLY<br>
-        // CLEARED ON PAGE RELOAD<br>
-        // NO PERSISTENT STORAGE
-      </div>
-    </div>
-  </div>
-
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// ── sidebar population from sessionStorage ──────────────────────────────────
+// ── 3D Plotly graph ───────────────────────────────────────────────────────────
+// NOTE: plotData must be declared before buildSidebar() so toggleSession can reference it
+const plotData = {{ plot_data | safe }};
+let plotInitialised = false;
+let frames      = [];   // populated by initPlot()
+let frameRatios = [];   // normalised per-frame speed ratios
+
+  // ── sidebar ───────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const sessions  = Sessions.all();
   const list      = document.getElementById('sidebarList');
@@ -665,13 +688,10 @@ function buildSidebar() {
 
   countEl.textContent = sessions.length + (sessions.length === 1 ? ' flight' : ' flights');
 
-  if (!sessions.length) {
-    empty.style.display = 'flex';
-    return;
-  }
+  if (!sessions.length) { empty.style.display = 'flex'; return; }
   empty.style.display = 'none';
 
-  list.innerHTML = sessions.map((s, i) => `
+  list.innerHTML = sessions.map(s => `
     <div class="session-card ${s.id === currentId ? 'expanded' : ''}" id="sc-${s.id}">
       <div class="session-card-header" onclick="toggleSession('${s.id}')">
         <div class="session-dot" style="${s.id === currentId ? 'background:var(--acid)' : ''}"></div>
@@ -683,24 +703,15 @@ function buildSidebar() {
       </div>
       <div class="session-body">
         <div class="session-mini-metrics">
-          <div class="mini-metric">
-            <div class="mini-metric-val ph">—</div>
-            <div class="mini-metric-label">Duration</div>
-          </div>
-          <div class="mini-metric">
-            <div class="mini-metric-val ph">—</div>
-            <div class="mini-metric-label">Distance</div>
-          </div>
-          <div class="mini-metric">
-            <div class="mini-metric-val ph">—</div>
-            <div class="mini-metric-label">Max speed</div>
-          </div>
-          <div class="mini-metric">
-            <div class="mini-metric-val ph">—</div>
-            <div class="mini-metric-label">Max alt.</div>
-          </div>
+          <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Duration</div></div>
+          <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Distance</div></div>
+          <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Max speed</div></div>
+          <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Max alt.</div></div>
         </div>
-        <div class="mini-graph" id="mg-${s.id}"></div>
+        <div class="session-alt-label">Altitude Profile</div>
+        <div class="session-alt-wrap" id="saw-${s.id}">
+          <canvas id="sac-${s.id}" style="width:100%;height:100%;display:block"></canvas>
+        </div>
         <a href="/dashboard/${s.id}" class="session-open-btn">
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.2">
             <path d="M1 8 L8 1 M4 1 L8 1 L8 5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -712,143 +723,459 @@ function buildSidebar() {
   `).join('');
 }
 
+function drawSessionAltProfile(id, alts) {
+  const canvas = document.getElementById('sac-' + id);
+  const wrap   = document.getElementById('saw-' + id);
+  if (!canvas || !wrap || !alts || !alts.length) return;
+
+  // Use the wrap's rendered size
+  const W = wrap.clientWidth  || 300;
+  const H = wrap.clientHeight || 80;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx  = canvas.getContext('2d');
+  const n    = alts.length;
+  const minA = Math.min(...alts);
+  const maxA = Math.max(...alts);
+  const pad  = 14;
+
+  const px = i => pad + (i / (n - 1)) * (W - pad * 2);
+  const py = a => H - pad - ((a - minA) / (maxA - minA + 0.001)) * (H - pad * 2);
+
+  // fill under curve
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(alts[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+  ctx.lineTo(px(n - 1), H - pad);
+  ctx.lineTo(px(0),     H - pad);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(57,255,110,0.07)';
+  ctx.fill();
+
+  // stroke
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(alts[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+  ctx.strokeStyle = 'rgba(57,255,110,0.65)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // min/max labels
+  ctx.font = '8px "Share Tech Mono", monospace';
+  ctx.fillStyle = 'rgba(57,255,110,0.4)';
+  ctx.textAlign = 'left';
+  ctx.fillText(maxA.toFixed(0) + ' m', 2, pad + 2);
+  ctx.fillText(minA.toFixed(0) + ' m', 2, H - 3);
+}
+
+// ── fetch altitude data for a session by scraping its dashboard page ─────────
+const altCache = {};  // id → Float32Array of altitude values
+
+async function fetchSessionAlts(id) {
+  if (altCache[id]) return altCache[id];
+  try {
+    const res  = await fetch('/dashboard/' + id);
+    if (!res.ok) return null;
+    const html = await res.text();
+    // Extract the plot_data JSON injected by Jinja: `const plotData = {...};`
+    const match = html.match(/const\s+plotData\s*=\s*(\{[\s\S]*?\});\s*\n/);
+    if (!match) return null;
+    const data = JSON.parse(match[1]);
+    if (data && data.U && data.U.length) {
+      altCache[id] = data.U;
+      return data.U;
+    }
+  } catch (e) { /* network or parse error — silently skip */ }
+  return null;
+}
+
 function toggleSession(id) {
   const card = document.getElementById('sc-' + id);
+  if (!card) return;
+  const wasExpanded = card.classList.contains('expanded');
   card.classList.toggle('expanded');
+
+  if (!wasExpanded) {
+    const currentId = '{{ session.id if session else "" }}';
+    if (id === currentId && plotData && plotData.U) {
+      // Current session — data already in memory
+      setTimeout(() => drawSessionAltProfile(id, plotData.U), 30);
+    } else {
+      // Other session — fetch its data, then draw
+      fetchSessionAlts(id).then(alts => {
+        if (alts) drawSessionAltProfile(id, alts);
+      });
+    }
+  }
 }
 
 buildSidebar();
 
-
-// ── Plotly 3D graph ──────────────────────────────────────────────────────────
-const plotEl = document.getElementById('plot3d');
-if (plotEl) {
-  const d = {{ plot_data | safe }};
-  if (d && d.E) {
-    const traces = [
-      {
-        type: 'scatter3d',
-        mode: 'lines',
-        x: d.E, y: d.N, z: d.U,
-        line: {
-          color: d.spd.length ? d.spd : d.U,
-          colorscale: 'Viridis',
-          width: 4,
-          colorbar: {
-            thickness: 12,
-            len: 0.5,
-            tickfont: { color: '#a0a8b8' },
-            title: { text: d.spd.length ? 'Speed (m/s)' : 'Alt (m)', font: { color: '#a0a8b8' } },
-          },
-        },
-        hovertemplate: 'E: %{x:.1f} m<br>N: %{y:.1f} m<br>Alt: %{z:.1f} m<extra></extra>',
-        name: 'Trajectory',
-      },
-      {
-        type: 'scatter3d', mode: 'markers+text',
-        x: [d.takeoff.E], y: [d.takeoff.N], z: [d.takeoff.U],
-        marker: { size: 7, color: '#39ff6e' },
-        text: ['Takeoff'], textposition: 'top center',
-        textfont: { color: '#39ff6e', size: 11 },
-        showlegend: false,
-      },
-      {
-        type: 'scatter3d', mode: 'markers+text',
-        x: [d.landing.E], y: [d.landing.N], z: [d.landing.U],
-        marker: { size: 7, color: '#ff4545', symbol: 'square' },
-        text: ['Landing'], textposition: 'top center',
-        textfont: { color: '#ff4545', size: 11 },
-        showlegend: false,
-      },
-    ];
-
-    const layout = {
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor:  'rgba(0,0,0,0)',
-      margin: { l: 0, r: 0, t: 0, b: 0 },
-      scene: {
-        bgcolor: 'rgba(14,19,24,1)',
-        xaxis: { title: 'East (m)',  titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
-        yaxis: { title: 'North (m)', titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
-        zaxis: { title: 'Alt (m)',   titlefont: { color: '#5a6478', size: 11 }, tickfont: { color: '#5a6478', size: 10 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
-        aspectmode: 'data',
-      },
-      legend: { font: { color: '#a0a8b8' } },
-    };
-
-    Plotly.newPlot('plot3d', traces, layout, { responsive: true, displaylogo: false });
-  }
-}
-
-
-// ── altitude profile placeholder ────────────────────────────────────────────
-const altCanvas = document.getElementById('altCanvas');
-if (altCanvas) {
-  const ctx2 = altCanvas.getContext('2d');
-  let t2 = 0;
-
-  function resizeAlt() {
-    altCanvas.width  = altCanvas.offsetWidth;
-    altCanvas.height = altCanvas.offsetHeight;
-  }
-  resizeAlt();
-  window.addEventListener('resize', resizeAlt);
-
-  function drawAlt() {
-    const W = altCanvas.width, H = altCanvas.height;
-    ctx2.clearRect(0, 0, W, H);
-    const pts = W;
-    ctx2.beginPath();
-    for (let i = 0; i < pts; i++) {
-      const x = i;
-      const y = H * 0.6
-        - Math.sin(i * 0.04 + t2) * H * 0.25
-        - Math.sin(i * 0.012 + t2 * 0.5) * H * 0.15;
-      i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+// Draw already-expanded cards on load (current session is auto-expanded)
+{
+  const currentId = '{{ session.id if session else "" }}';
+  Sessions.all().forEach(s => {
+    const card = document.getElementById('sc-' + s.id);
+    if (!card || !card.classList.contains('expanded')) return;
+    if (s.id === currentId && plotData && plotData.U) {
+      setTimeout(() => drawSessionAltProfile(s.id, plotData.U), 120);
+    } else {
+      fetchSessionAlts(s.id).then(alts => {
+        if (alts) drawSessionAltProfile(s.id, alts);
+      });
     }
-    ctx2.strokeStyle = 'rgba(57,255,110,0.4)';
-    ctx2.lineWidth = 1.5;
-    ctx2.stroke();
-
-    // fill
-    ctx2.lineTo(pts, H); ctx2.lineTo(0, H); ctx2.closePath();
-    ctx2.fillStyle = 'rgba(57,255,110,0.04)';
-    ctx2.fill();
-
-    t2 += 0.018;
-    requestAnimationFrame(drawAlt);
-  }
-  drawAlt();
+  });
 }
 
+function initPlot() {
+  if (!plotData || !plotData.E) return;
 
-// ── mini graph sparklines in sidebar ────────────────────────────────────────
-function drawMiniGraph(id) {
-  const el = document.getElementById('mg-' + id);
+  const E = plotData.E;
+  const N = plotData.N;
+  const U = plotData.U;
+
+  const el = document.getElementById('plot3d');
   if (!el) return;
-  const canvas = document.createElement('canvas');
-  canvas.width  = el.offsetWidth || 260;
-  canvas.height = 60;
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
-  el.style.position = 'relative';
-  el.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const seed = id.charCodeAt(0);
-  ctx.beginPath();
-  for (let i = 0; i < W; i++) {
-    const y = H * 0.5
-      - Math.sin(i * 0.05 + seed) * H * 0.3
-      - Math.sin(i * 0.02 + seed * 0.7) * H * 0.15;
-    i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+
+  // ── LOCK RANGES (prevents zoom jumping) ────────────────────────────────────
+  const xMin = Math.min(...E), xMax = Math.max(...E);
+  const yMin = Math.min(...N), yMax = Math.max(...N);
+  const zMin = Math.min(...U), zMax = Math.max(...U);
+
+  const colorData = plotData.spd.length ? plotData.spd : U;
+
+  // ── INITIAL TRACES ─────────────────────────────────────────────────────────
+ const traces = [
+    {
+      type: 'scatter3d', mode: 'lines',
+      x: plotData.E, y: plotData.N, z: plotData.U,
+      line: {
+        color: plotData.spd.length ? plotData.spd : plotData.U,
+        colorscale: 'Viridis', width: 4,
+        colorbar: {
+          thickness: 10, len: 0.45,
+          tickfont: { color: '#a0a8b8', size: 9 },
+          title: { text: plotData.spd.length ? 'Speed (m/s)' : 'Alt (m)', font: { color: '#a0a8b8', size: 9 } },
+        },
+      },
+      hovertemplate: 'E: %{x:.1f} m<br>N: %{y:.1f} m<br>Alt: %{z:.1f} m<extra></extra>',
+      name: 'Trajectory',
+    },
+    {
+      type: 'scatter3d', mode: 'markers+text',
+      x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
+      marker: { size: 8, color: '#FFE033' },
+      text: ['Current'], textposition: 'top center',
+      textfont: { color: '#FFE033', size: 11 },
+      showlegend: false,
+    },
+    {
+      type: 'scatter3d', mode: 'markers+text',
+      x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
+      marker: { size: 7, color: '#39ff6e' },
+      text: ['Start'], textposition: 'top center',
+      textfont: { color: '#39ff6e', size: 11 },
+      showlegend: false,
+    },
+    {
+      type: 'scatter3d', mode: 'markers+text',
+      x: [plotData.landing.E], y: [plotData.landing.N], z: [plotData.landing.U],
+      marker: { size: 7, color: '#ff4545', symbol: 'square' },
+      text: ['Finish'], textposition: 'top center',
+      textfont: { color: '#ff4545', size: 11 },
+      showlegend: false,
+    },
+  ];
+
+  // ── FRAMES (animation — speed-proportional timing) ────────────────────────
+  // Each frame's duration is inversely proportional to the drone's actual m/s speed
+  // at that point, so fast segments play faster and slow segments play slower.
+  frames = [];
+  const step = 2;
+
+  const hasSpdData = plotData.spd && plotData.spd.length === E.length;
+  const spdArr = hasSpdData ? plotData.spd : null;
+
+  let rawDurations = [];
+  for (let i = 1; i < E.length; i += step) {
+    const spd = spdArr ? spdArr[i] : null;
+    rawDurations.push(spd && spd > 0.1 ? 1 / spd : 1);
   }
-  ctx.strokeStyle = 'rgba(57,255,110,0.3)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  const avgRaw = rawDurations.reduce((a, b) => a + b, 0) / rawDurations.length;
+
+  frameRatios = rawDurations.map(r => r / avgRaw);
+
+  for (let k = 0; k < frameRatios.length; k++) {
+    const i = 1 + k * step;
+    if (i >= E.length) break;
+    frames.push({
+      name: String(i),
+      data: [
+        {
+          x: E.slice(0, i),
+          y: N.slice(0, i),
+          z: U.slice(0, i),
+          line: {
+            color: plotData.spd.length ? plotData.spd : plotData.U,
+            colorscale: 'Viridis',
+            width: 4
+          }
+        },
+        {
+          x: [E[i]],
+          y: [N[i]],
+          z: [U[i]]
+        }
+      ]
+    });
+  }
+
+  // ── LAYOUT ─────────────────────────────────────────────────────────────────
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor:  'rgba(0,0,0,0)',
+    margin: { l: 0, r: 0, t: 0, b: 0 },
+
+    uirevision: 'lock-camera',
+
+    scene: {
+      bgcolor: 'rgba(14,19,24,1)',
+      camera: { eye: { x: 3.2, y: 3.2, z: 2.4 } },
+      xaxis: { title: 'East (m)',  tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+      yaxis: { title: 'North (m)', tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+      zaxis: { title: 'Alt (m)',   tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
+      aspectmode: 'data',
+      // aspectratio: { x: 1, y: 1, z: 0.7 }
+    },
+    legend: { font: { color: '#a0a8b8' },
+    },
+
+    // ── CONTROLS (no Plotly built-in buttons — custom HTML below) ────────────
+    updatemenus: []
+  };
+
+  // ── INIT + LOAD FRAMES ─────────────────────────────────────────────────────
+  Plotly.newPlot('plot3d', traces, layout, {
+    responsive: true,
+    displaylogo: false
+  }).then(() => {
+    Plotly.addFrames('plot3d', frames);
+
+    // ── AUTO PLAY (speed-proportional) ──────────────────────────────────────
+    runSpeedProportionalAnim(0);
+  });
+
+  plotInitialised = true;
 }
 
-Sessions.all().forEach(s => {
-  if (document.getElementById('sc-' + s.id)) drawMiniGraph(s.id);
-});
+initPlot();
+
+// ── animation speed slider ────────────────────────────────────────────────────
+let animationFrameDuration = 40;
+
+function sliderToDuration(v) {
+  return Math.round(200 / Math.pow(2, (v - 1) * 0.48));
+}
+
+// ── speed-proportional animation engine ──────────────────────────────────────
+let animFrameIndex = 0;
+let animTimerId    = null;
+let animPlaying    = false;
+
+function runSpeedProportionalAnim(startIndex) {
+  if (!plotInitialised) return;
+  if (typeof frames === 'undefined' || !frames.length) return;
+
+  animFrameIndex = startIndex;
+  animPlaying = true;
+  setAnimButtonState(true);
+
+  function tick() {
+    if (!animPlaying) return;
+
+    // Reached the end — stop and pause
+    if (animFrameIndex >= frames.length) {
+      animPlaying = false;
+      animTimerId = null;
+      setAnimButtonState(false);
+      return;
+    }
+
+    const frameName = frames[animFrameIndex].name;
+    Plotly.animate('plot3d', [frameName], {
+      frame: { duration: 0, redraw: true },
+      transition: { duration: 0 },
+      mode: 'immediate'
+    });
+
+    // Duration for this step: ratio * base, clamped 4ms–500ms
+    const ratio    = (typeof frameRatios !== 'undefined' && frameRatios[animFrameIndex]) ? frameRatios[animFrameIndex] : 1;
+    const duration = Math.min(500, Math.max(4, Math.round(ratio * animationFrameDuration)));
+
+    animFrameIndex++;
+    animTimerId = setTimeout(tick, duration);
+  }
+
+  tick();
+}
+
+function setAnimButtonState(playing) {
+  animPlaying = playing;
+  const btnPlay  = document.getElementById('btnPlay');
+  const btnPause = document.getElementById('btnPause');
+  if (!btnPlay || !btnPause) return;
+  btnPlay.classList.toggle('active', playing);
+  btnPause.classList.toggle('active', !playing);
+}
+
+function animPlay() {
+  if (!plotInitialised) return;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  // If at the end, restart from the beginning
+  const startFrom = (animFrameIndex >= frames.length) ? 0 : animFrameIndex;
+  runSpeedProportionalAnim(startFrom);
+}
+
+function animPause() {
+  if (!plotInitialised) return;
+  animPlaying = false;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  setAnimButtonState(false);
+}
+
+function animReset() {
+  if (!plotInitialised) return;
+  animPlaying = false;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  animFrameIndex = 0;
+  Plotly.animate('plot3d', [frames[0].name], {
+    frame: { duration: 0, redraw: true },
+    transition: { duration: 0 },
+    mode: 'immediate'
+  }).then(() => runSpeedProportionalAnim(0));
+}
+
+const speedSlider = document.getElementById('speedSlider');
+const speedVal    = document.getElementById('speedVal');
+
+if (speedSlider) {
+  speedSlider.addEventListener('input', () => {
+    const v = parseInt(speedSlider.value);
+    speedVal.textContent = v + '×';
+    animationFrameDuration = sliderToDuration(v);
+    // Restart from current position if playing so new speed kicks in immediately
+    if (animPlaying && plotInitialised) {
+      if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+      runSpeedProportionalAnim(animFrameIndex);
+    }
+  });
+
+  speedVal.textContent = speedSlider.value + '×';
+  animationFrameDuration = sliderToDuration(parseInt(speedSlider.value));
+}
+
+
+const CAMERAS = {
+  top:   { eye: { x: 0,   y: 0,   z: 4.0 }, up: { x: 0, y: 1, z: 0 } },
+  front: { eye: { x: 0,   y: 4.0, z: 0.5 }, up: { x: 0, y: 0, z: 1 } },
+  side:  { eye: { x: 4.0, y: 0,   z: 0.5 }, up: { x: 0, y: 0, z: 1 } },
+  free:  { eye: { x: 3.2, y: 3.2, z: 2.4 }, up: { x: 0, y: 0, z: 1 } },
+};
+
+function setView(name, btn) {
+  if (!plotInitialised) return;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  Plotly.relayout('plot3d', { 'scene.camera': CAMERAS[name] });
+}
+
+// ── altitude profile ──────────────────────────────────────────────────────────
+const altCanvas = document.getElementById('altProfile');
+if (altCanvas && plotData && plotData.U) {
+  const tooltip = document.getElementById('altTooltip');
+  const wrap    = altCanvas.parentElement;
+
+  function drawAltProfile() {
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+    altCanvas.width  = W;
+    altCanvas.height = H;
+    const ctx  = altCanvas.getContext('2d');
+    const alts = plotData.U;
+    const n    = alts.length;
+    const minA = Math.min(...alts);
+    const maxA = Math.max(...alts);
+    const pad  = 18;
+
+    const px = i => pad + (i / (n - 1)) * (W - pad * 2);
+    const py = a => H - pad - ((a - minA) / (maxA - minA + 0.001)) * (H - pad * 2);
+
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(alts[0]));
+    for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+    ctx.lineTo(px(n-1), H - pad);
+    ctx.lineTo(px(0),   H - pad);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(57,255,110,0.06)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(alts[0]));
+    for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+    ctx.strokeStyle = 'rgba(57,255,110,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = '9px "Share Tech Mono", monospace';
+    ctx.fillStyle = '#2e3e32';
+    ctx.textAlign = 'left';
+    ctx.fillText(maxA.toFixed(0) + ' m', 3, pad + 4);
+    ctx.fillText(minA.toFixed(0) + ' m', 3, H - pad + 1);
+  }
+
+  drawAltProfile();
+  window.addEventListener('resize', drawAltProfile);
+
+  altCanvas.addEventListener('mousemove', e => {
+    const alts = plotData.U;
+    const n    = alts.length;
+    const W    = altCanvas.width;
+    const pad  = 18;
+    const rect = altCanvas.getBoundingClientRect();
+    const mx   = e.clientX - rect.left;
+    const idx  = Math.max(0, Math.min(n - 1, Math.round(((mx - pad) / (W - pad * 2)) * (n - 1))));
+
+    const alt = alts[idx].toFixed(1);
+    const spd = plotData.spd[idx] !== undefined ? '  ·  ' + plotData.spd[idx].toFixed(1) + ' m/s' : '';
+
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.offsetX + 12) + 'px';
+    tooltip.style.top  = Math.max(2, e.offsetY - 28) + 'px';
+    tooltip.textContent = 'Alt: ' + alt + ' m' + spd;
+
+    if (plotInitialised && plotData.E) {
+      Plotly.restyle('plot3d', {
+        x: [[plotData.E[idx]]],
+        y: [[plotData.N[idx]]],
+        z: [[plotData.U[idx]]],
+        'marker.size': [9],
+        'marker.color': ['#ffffff'],
+      }, [1]);
+    }
+  });
+
+  altCanvas.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    if (plotInitialised && plotData.takeoff) {
+      Plotly.restyle('plot3d', {
+        x: [[plotData.takeoff.E]], y: [[plotData.takeoff.N]], z: [[plotData.takeoff.U]],
+        'marker.size': [7], 'marker.color': ['#FFE033'],
+      }, [1]);
+    }
+  });
+}
+
+
 </script>
 {% endblock %}

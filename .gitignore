@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Середовище
+.env
+venv/
+.venv/
+
+# Система
+.DS_Store
+Thumbs.db

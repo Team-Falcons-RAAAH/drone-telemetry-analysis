@@ -37,25 +37,36 @@
   .btn-sm {
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
-    padding: 8px 18px;
+    letter-spacing: 0.1em;
+    padding: 10px 22px;
     text-decoration: none;
-    border: 1px solid var(--g5);
-    color: var(--text-dim);
-    background: transparent;
+    border: 1px solid var(--acid-dim);
+    color: var(--acid);
+    background: var(--acid-faint);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
   }
-  .btn-sm:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+  .btn-sm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(57,255,110,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+  .btn-sm:hover::before { transform: translateX(100%); }
+  .btn-sm:hover { color: var(--acid); border-color: var(--acid); background: rgba(57,255,110,0.12); box-shadow: 0 0 12px rgba(57,255,110,0.15); }
 
   /* ── three-column body ── */
   .dash-body {
     display: grid;
-    grid-template-columns: 280px 1fr 300px;
+    grid-template-columns: 340px 1fr 360px;
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -77,7 +88,7 @@
 
   .section-label {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-faint);
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -95,24 +106,24 @@
 
   .metric-cell {
     background: var(--g2);
-    padding: 14px 16px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
   }
 
   .metric-cell-val {
     font-family: var(--display);
-    font-size: 26px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--acid);
     line-height: 1;
   }
-  .metric-cell-val.placeholder { color: var(--g5); font-size: 20px; }
+  .metric-cell-val.placeholder { color: var(--g5); font-size: 24px; }
 
   .metric-cell-label {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -121,7 +132,7 @@
   /* altitude profile */
   .alt-wrap {
     position: relative;
-    height: 130px;
+    height: 160px;
     background: var(--g2);
     border: 1px solid var(--g4);
     cursor: crosshair;
@@ -158,10 +169,10 @@
 
   .ai-badge {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 3px 7px;
+    padding: 4px 9px;
     background: var(--acid-faint);
     border: 1px solid var(--wire);
     color: var(--acid-dim);
@@ -169,7 +180,7 @@
 
   .ai-model-tag {
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-faint);
     letter-spacing: 0.05em;
     margin-left: auto;
@@ -196,14 +207,14 @@
 
   .anomaly-chip {
     font-family: var(--mono);
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 4px 8px;
+    padding: 5px 10px;
     border: 1px solid;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
   }
   .chip-pending { color: var(--text-faint); border-color: var(--g4); }
   .chip-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
@@ -219,11 +230,12 @@
   .plot-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 18px;
+    gap: 12px;
+    padding: 10px 18px;
     border-bottom: 1px solid var(--g3);
     background: var(--g1);
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
   .plot-title {
@@ -233,23 +245,121 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-dim);
+    margin-right: auto;
   }
 
-  .view-btns { display: flex; gap: 4px; }
+  /* ── anim buttons ── */
+  .anim-controls { display: flex; gap: 3px; }
+
+  .anim-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 11px;
+    border: 1px solid var(--g4);
+    color: var(--text-dim);
+    background: var(--g2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .anim-btn:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+
+  .anim-play.active  { color: var(--acid); border-color: var(--acid); background: var(--acid-faint); box-shadow: 0 0 8px rgba(57,255,110,0.15); }
+  .anim-pause.active { color: #f0c040;     border-color: rgba(240,192,64,0.5); background: rgba(240,192,64,0.06); }
+  .anim-reset { }
+  .anim-reset:hover  { color: #ff6060; border-color: rgba(255,96,96,0.5); background: rgba(255,96,96,0.06); }
+
+  .view-btns { display: flex; gap: 3px; }
 
   .view-btn {
     font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 5px 12px;
-    border: 1px solid var(--g5);
+    padding: 6px 14px;
+    border: 1px solid var(--g4);
     color: var(--text-dim);
-    background: transparent;
+    background: var(--g2);
     cursor: pointer;
     transition: all 0.15s;
+    position: relative;
   }
-  .view-btn:hover, .view-btn.active { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+  .view-btn:hover { color: var(--acid); border-color: var(--acid-dim); background: var(--acid-faint); }
+  .view-btn.active {
+    color: var(--acid);
+    border-color: var(--acid);
+    background: var(--acid-faint);
+    box-shadow: 0 0 8px rgba(57,255,110,0.12), inset 0 0 8px rgba(57,255,110,0.04);
+  }
+  .view-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 1px;
+    background: var(--acid);
+    box-shadow: 0 0 6px var(--acid);
+  }
+
+  /* ── speed slider ── */
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
+  }
+  .speed-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .speed-val {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--acid);
+    min-width: 28px;
+    text-align: right;
+  }
+  #speedSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 90px;
+    height: 2px;
+    background: var(--g4);
+    outline: none;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  #speedSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    background: var(--acid);
+    cursor: pointer;
+    border-radius: 0;
+    box-shadow: 0 0 6px rgba(57,255,110,0.4);
+    transition: box-shadow 0.15s;
+  }
+  #speedSlider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 10px rgba(57,255,110,0.7);
+  }
+  #speedSlider::-moz-range-thumb {
+    width: 10px; height: 10px;
+    background: var(--acid);
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+    box-shadow: 0 0 6px rgba(57,255,110,0.4);
+  }
+  #speedSlider::-webkit-slider-runnable-track { background: var(--g4); height: 2px; }
+  #speedSlider::-moz-range-track { background: var(--g4); height: 2px; }
 
   #plot3d { flex: 1; min-height: 0; }
 
@@ -271,7 +381,7 @@
 
   .sidebar-title {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -279,7 +389,7 @@
 
   .sidebar-count {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--acid-dim);
     letter-spacing: 0.06em;
   }
@@ -322,7 +432,7 @@
 
   .session-name {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text);
     letter-spacing: 0.04em;
     flex: 1;
@@ -331,7 +441,7 @@
     white-space: nowrap;
   }
 
-  .session-time { font-family: var(--mono); font-size: 9px; color: var(--text-faint); flex-shrink: 0; }
+  .session-time { font-family: var(--mono); font-size: 10px; color: var(--text-faint); flex-shrink: 0; }
   .session-chevron { width: 10px; height: 10px; flex-shrink: 0; transition: transform 0.2s; }
   .session-card.expanded .session-chevron { transform: rotate(90deg); }
 
@@ -339,12 +449,27 @@
   .session-card.expanded .session-body { display: flex; }
 
   .session-mini-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--g3); }
-  .mini-metric { background: var(--g2); padding: 8px 10px; }
-  .mini-metric-val { font-family: var(--display); font-size: 16px; font-weight: 700; color: var(--acid); line-height: 1; margin-bottom: 2px; }
-  .mini-metric-val.ph { color: var(--g5); font-size: 13px; }
-  .mini-metric-label { font-family: var(--mono); font-size: 8px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+  .mini-metric { background: var(--g2); padding: 10px 12px; }
+  .mini-metric-val { font-family: var(--display); font-size: 18px; font-weight: 700; color: var(--acid); line-height: 1; margin-bottom: 3px; }
+  .mini-metric-val.ph { color: var(--g5); font-size: 15px; }
+  .mini-metric-label { font-family: var(--mono); font-size: 9px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; }
 
-  .mini-graph { height: 48px; background: var(--g3); border: 1px solid var(--g4); position: relative; overflow: hidden; }
+  /* altitude profile inside expanded session card */
+  .session-alt-wrap {
+    position: relative;
+    height: 80px;
+    background: var(--g2);
+    border: 1px solid var(--g4);
+  }
+  .session-alt-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    margin-top: 2px;
+  }
 
   .session-open-btn {
     font-family: var(--mono);
@@ -484,6 +609,25 @@
     <div class="dash-centre">
       <div class="plot-head">
         <span class="plot-title">3D Trajectory — ENU Space</span>
+        <div class="anim-controls">
+          <button class="anim-btn anim-play active" id="btnPlay" onclick="animPlay()">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor"><path d="M1 1 L8 5 L1 9 Z"/></svg>
+            Play
+          </button>
+          <button class="anim-btn anim-pause" id="btnPause" onclick="animPause()">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor"><rect x="1" y="1" width="2.5" height="8"/><rect x="5.5" y="1" width="2.5" height="8"/></svg>
+            Pause
+          </button>
+          <button class="anim-btn anim-reset" id="btnReset" onclick="animReset()">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 5 A4 4 0 1 1 4 1.3" stroke-linecap="round"/><path d="M1 1.5 L1 5 L4.5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reset
+          </button>
+        </div>
+        <div class="speed-control">
+          <span class="speed-label">Speed</span>
+          <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
+          <span class="speed-val" id="speedVal">5×</span>
+        </div>
         <div class="view-btns">
           <button class="view-btn" onclick="setView('top',this)">Top</button>
           <button class="view-btn" onclick="setView('front',this)">Front</button>
@@ -527,6 +671,13 @@
 
 {% block scripts %}
 <script>
+// ── 3D Plotly graph ───────────────────────────────────────────────────────────
+// NOTE: plotData must be declared before buildSidebar() so toggleSession can reference it
+const plotData = {{ plot_data | safe }};
+let plotInitialised = false;
+let frames      = [];   // populated by initPlot()
+let frameRatios = [];   // normalised per-frame speed ratios
+
   // ── sidebar ───────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const sessions  = Sessions.all();
@@ -557,7 +708,10 @@ function buildSidebar() {
           <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Max speed</div></div>
           <div class="mini-metric"><div class="mini-metric-val ph">—</div><div class="mini-metric-label">Max alt.</div></div>
         </div>
-        <div class="mini-graph" id="mg-${s.id}"></div>
+        <div class="session-alt-label">Altitude Profile</div>
+        <div class="session-alt-wrap" id="saw-${s.id}">
+          <canvas id="sac-${s.id}" style="width:100%;height:100%;display:block"></canvas>
+        </div>
         <a href="/dashboard/${s.id}" class="session-open-btn">
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.2">
             <path d="M1 8 L8 1 M4 1 L8 1 L8 5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -569,21 +723,127 @@ function buildSidebar() {
   `).join('');
 }
 
+function drawSessionAltProfile(id, alts) {
+  const canvas = document.getElementById('sac-' + id);
+  const wrap   = document.getElementById('saw-' + id);
+  if (!canvas || !wrap || !alts || !alts.length) return;
+
+  // Use the wrap's rendered size
+  const W = wrap.clientWidth  || 300;
+  const H = wrap.clientHeight || 80;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx  = canvas.getContext('2d');
+  const n    = alts.length;
+  const minA = Math.min(...alts);
+  const maxA = Math.max(...alts);
+  const pad  = 14;
+
+  const px = i => pad + (i / (n - 1)) * (W - pad * 2);
+  const py = a => H - pad - ((a - minA) / (maxA - minA + 0.001)) * (H - pad * 2);
+
+  // fill under curve
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(alts[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+  ctx.lineTo(px(n - 1), H - pad);
+  ctx.lineTo(px(0),     H - pad);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(57,255,110,0.07)';
+  ctx.fill();
+
+  // stroke
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(alts[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(px(i), py(alts[i]));
+  ctx.strokeStyle = 'rgba(57,255,110,0.65)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // min/max labels
+  ctx.font = '8px "Share Tech Mono", monospace';
+  ctx.fillStyle = 'rgba(57,255,110,0.4)';
+  ctx.textAlign = 'left';
+  ctx.fillText(maxA.toFixed(0) + ' m', 2, pad + 2);
+  ctx.fillText(minA.toFixed(0) + ' m', 2, H - 3);
+}
+
+// ── fetch altitude data for a session by scraping its dashboard page ─────────
+const altCache = {};  // id → Float32Array of altitude values
+
+async function fetchSessionAlts(id) {
+  if (altCache[id]) return altCache[id];
+  try {
+    const res  = await fetch('/dashboard/' + id);
+    if (!res.ok) return null;
+    const html = await res.text();
+    // Extract the plot_data JSON injected by Jinja: `const plotData = {...};`
+    const match = html.match(/const\s+plotData\s*=\s*(\{[\s\S]*?\});\s*\n/);
+    if (!match) return null;
+    const data = JSON.parse(match[1]);
+    if (data && data.U && data.U.length) {
+      altCache[id] = data.U;
+      return data.U;
+    }
+  } catch (e) { /* network or parse error — silently skip */ }
+  return null;
+}
+
 function toggleSession(id) {
-  document.getElementById('sc-' + id).classList.toggle('expanded');
+  const card = document.getElementById('sc-' + id);
+  if (!card) return;
+  const wasExpanded = card.classList.contains('expanded');
+  card.classList.toggle('expanded');
+
+  if (!wasExpanded) {
+    const currentId = '{{ session.id if session else "" }}';
+    if (id === currentId && plotData && plotData.U) {
+      // Current session — data already in memory
+      setTimeout(() => drawSessionAltProfile(id, plotData.U), 30);
+    } else {
+      // Other session — fetch its data, then draw
+      fetchSessionAlts(id).then(alts => {
+        if (alts) drawSessionAltProfile(id, alts);
+      });
+    }
+  }
 }
 
 buildSidebar();
 
-// ── 3D Plotly graph ───────────────────────────────────────────────────────────
-const plotData = {{ plot_data | safe }};
-let plotInitialised = false;
+// Draw already-expanded cards on load (current session is auto-expanded)
+{
+  const currentId = '{{ session.id if session else "" }}';
+  Sessions.all().forEach(s => {
+    const card = document.getElementById('sc-' + s.id);
+    if (!card || !card.classList.contains('expanded')) return;
+    if (s.id === currentId && plotData && plotData.U) {
+      setTimeout(() => drawSessionAltProfile(s.id, plotData.U), 120);
+    } else {
+      fetchSessionAlts(s.id).then(alts => {
+        if (alts) drawSessionAltProfile(s.id, alts);
+      });
+    }
+  });
+}
 
 function initPlot() {
   if (!plotData || !plotData.E) return;
 
+  const E = plotData.E;
+  const N = plotData.N;
+  const U = plotData.U;
+
   const el = document.getElementById('plot3d');
   if (!el) return;
+
+  // ── LOCK RANGES (prevents zoom jumping) ────────────────────────────────────
+  const xMin = Math.min(...E), xMax = Math.max(...E);
+  const yMin = Math.min(...N), yMax = Math.max(...N);
+  const zMin = Math.min(...U), zMax = Math.max(...U);
+
+  const colorData = plotData.spd.length ? plotData.spd : U;
 
   // ── INITIAL TRACES ─────────────────────────────────────────────────────────
  const traces = [
@@ -605,16 +865,16 @@ function initPlot() {
     {
       type: 'scatter3d', mode: 'markers+text',
       x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
-      marker: { size: 7, color: '#F0F24B' },
+      marker: { size: 8, color: '#FFE033' },
       text: ['Current'], textposition: 'top center',
-      textfont: { color: '#F0F24B', size: 11 },
+      textfont: { color: '#FFE033', size: 11 },
       showlegend: false,
     },
     {
       type: 'scatter3d', mode: 'markers+text',
       x: [plotData.takeoff.E], y: [plotData.takeoff.N], z: [plotData.takeoff.U],
-      marker: { size: 7, color: '#' },
-      text: ['Takeoff'], textposition: 'top center',
+      marker: { size: 7, color: '#39ff6e' },
+      text: ['Start'], textposition: 'top center',
       textfont: { color: '#39ff6e', size: 11 },
       showlegend: false,
     },
@@ -622,24 +882,40 @@ function initPlot() {
       type: 'scatter3d', mode: 'markers+text',
       x: [plotData.landing.E], y: [plotData.landing.N], z: [plotData.landing.U],
       marker: { size: 7, color: '#ff4545', symbol: 'square' },
-      text: ['Landing'], textposition: 'top center',
+      text: ['Finish'], textposition: 'top center',
       textfont: { color: '#ff4545', size: 11 },
       showlegend: false,
     },
   ];
 
-  // ── FRAMES (animation) ─────────────────────────────────────────────────────
-  const frames = [];
-  const step = 2; // smoother motion (lower = smoother)
+  // ── FRAMES (animation — speed-proportional timing) ────────────────────────
+  // Each frame's duration is inversely proportional to the drone's actual m/s speed
+  // at that point, so fast segments play faster and slow segments play slower.
+  frames = [];
+  const step = 2;
 
-  for (let i = 1; i < plotData.E.length; i += step) {
+  const hasSpdData = plotData.spd && plotData.spd.length === E.length;
+  const spdArr = hasSpdData ? plotData.spd : null;
+
+  let rawDurations = [];
+  for (let i = 1; i < E.length; i += step) {
+    const spd = spdArr ? spdArr[i] : null;
+    rawDurations.push(spd && spd > 0.1 ? 1 / spd : 1);
+  }
+  const avgRaw = rawDurations.reduce((a, b) => a + b, 0) / rawDurations.length;
+
+  frameRatios = rawDurations.map(r => r / avgRaw);
+
+  for (let k = 0; k < frameRatios.length; k++) {
+    const i = 1 + k * step;
+    if (i >= E.length) break;
     frames.push({
       name: String(i),
       data: [
         {
-          x: plotData.E.slice(0, i),
-          y: plotData.N.slice(0, i),
-          z: plotData.U.slice(0, i),
+          x: E.slice(0, i),
+          y: N.slice(0, i),
+          z: U.slice(0, i),
           line: {
             color: plotData.spd.length ? plotData.spd : plotData.U,
             colorscale: 'Viridis',
@@ -647,9 +923,9 @@ function initPlot() {
           }
         },
         {
-          x: [plotData.E[i]],
-          y: [plotData.N[i]],
-          z: [plotData.U[i]]
+          x: [E[i]],
+          y: [N[i]],
+          z: [U[i]]
         }
       ]
     });
@@ -665,7 +941,7 @@ function initPlot() {
 
     scene: {
       bgcolor: 'rgba(14,19,24,1)',
-      camera: { eye: { x: 1.4, y: 1.4, z: 1.0 } },
+      camera: { eye: { x: 3.2, y: 3.2, z: 2.4 } },
       xaxis: { title: 'East (m)',  tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
       yaxis: { title: 'North (m)', tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
       zaxis: { title: 'Alt (m)',   tickfont: { color: '#5a6478', size: 9 }, gridcolor: '#1e2535', showbackground: true, backgroundcolor: 'rgba(14,19,24,0.6)', zeroline: false },
@@ -675,35 +951,8 @@ function initPlot() {
     legend: { font: { color: '#a0a8b8' },
     },
 
-    // ── CONTROLS ─────────────────────────────────────────────────────────────
-    updatemenus: [
-      {
-        type: 'buttons',
-        showactive: false,
-        x: 0.1,
-        y: 1.0,
-        buttons: [
-          {
-            label: 'Play',
-            method: 'animate',
-            args: [null, {
-              frame: { duration: 40, redraw: true }, // cinematic speed
-              transition: { duration: 0 },
-              fromcurrent: true,
-              mode: 'immediate'
-            }]
-          },
-          {
-            label: 'Pause',
-            method: 'animate',
-            args: [[null], {
-              frame: { duration: 0 },
-              mode: 'immediate'
-            }]
-          }
-        ]
-      }
-    ]
+    // ── CONTROLS (no Plotly built-in buttons — custom HTML below) ────────────
+    updatemenus: []
   };
 
   // ── INIT + LOAD FRAMES ─────────────────────────────────────────────────────
@@ -713,12 +962,8 @@ function initPlot() {
   }).then(() => {
     Plotly.addFrames('plot3d', frames);
 
-    // ── AUTO PLAY (cinematic) ────────────────────────────────────────────────
-    Plotly.animate('plot3d', null, {
-      frame: { duration: 40, redraw: true },
-      transition: { duration: 0 },
-      fromcurrent: true
-    });
+    // ── AUTO PLAY (speed-proportional) ──────────────────────────────────────
+    runSpeedProportionalAnim(0);
   });
 
   plotInitialised = true;
@@ -726,12 +971,116 @@ function initPlot() {
 
 initPlot();
 
-// ── camera view buttons ───────────────────────────────────────────────────────
+// ── animation speed slider ────────────────────────────────────────────────────
+let animationFrameDuration = 40;
+
+function sliderToDuration(v) {
+  return Math.round(200 / Math.pow(2, (v - 1) * 0.48));
+}
+
+// ── speed-proportional animation engine ──────────────────────────────────────
+let animFrameIndex = 0;
+let animTimerId    = null;
+let animPlaying    = false;
+
+function runSpeedProportionalAnim(startIndex) {
+  if (!plotInitialised) return;
+  if (typeof frames === 'undefined' || !frames.length) return;
+
+  animFrameIndex = startIndex;
+  animPlaying = true;
+  setAnimButtonState(true);
+
+  function tick() {
+    if (!animPlaying) return;
+
+    // Reached the end — stop and pause
+    if (animFrameIndex >= frames.length) {
+      animPlaying = false;
+      animTimerId = null;
+      setAnimButtonState(false);
+      return;
+    }
+
+    const frameName = frames[animFrameIndex].name;
+    Plotly.animate('plot3d', [frameName], {
+      frame: { duration: 0, redraw: true },
+      transition: { duration: 0 },
+      mode: 'immediate'
+    });
+
+    // Duration for this step: ratio * base, clamped 4ms–500ms
+    const ratio    = (typeof frameRatios !== 'undefined' && frameRatios[animFrameIndex]) ? frameRatios[animFrameIndex] : 1;
+    const duration = Math.min(500, Math.max(4, Math.round(ratio * animationFrameDuration)));
+
+    animFrameIndex++;
+    animTimerId = setTimeout(tick, duration);
+  }
+
+  tick();
+}
+
+function setAnimButtonState(playing) {
+  animPlaying = playing;
+  const btnPlay  = document.getElementById('btnPlay');
+  const btnPause = document.getElementById('btnPause');
+  if (!btnPlay || !btnPause) return;
+  btnPlay.classList.toggle('active', playing);
+  btnPause.classList.toggle('active', !playing);
+}
+
+function animPlay() {
+  if (!plotInitialised) return;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  // If at the end, restart from the beginning
+  const startFrom = (animFrameIndex >= frames.length) ? 0 : animFrameIndex;
+  runSpeedProportionalAnim(startFrom);
+}
+
+function animPause() {
+  if (!plotInitialised) return;
+  animPlaying = false;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  setAnimButtonState(false);
+}
+
+function animReset() {
+  if (!plotInitialised) return;
+  animPlaying = false;
+  if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+  animFrameIndex = 0;
+  Plotly.animate('plot3d', [frames[0].name], {
+    frame: { duration: 0, redraw: true },
+    transition: { duration: 0 },
+    mode: 'immediate'
+  }).then(() => runSpeedProportionalAnim(0));
+}
+
+const speedSlider = document.getElementById('speedSlider');
+const speedVal    = document.getElementById('speedVal');
+
+if (speedSlider) {
+  speedSlider.addEventListener('input', () => {
+    const v = parseInt(speedSlider.value);
+    speedVal.textContent = v + '×';
+    animationFrameDuration = sliderToDuration(v);
+    // Restart from current position if playing so new speed kicks in immediately
+    if (animPlaying && plotInitialised) {
+      if (animTimerId) { clearTimeout(animTimerId); animTimerId = null; }
+      runSpeedProportionalAnim(animFrameIndex);
+    }
+  });
+
+  speedVal.textContent = speedSlider.value + '×';
+  animationFrameDuration = sliderToDuration(parseInt(speedSlider.value));
+}
+
+
 const CAMERAS = {
-  top:   { eye: { x: 0,   y: 0,   z: 3.5 }, up: { x: 0, y: 1, z: 0 } },
-  front: { eye: { x: 0,   y: 3.5, z: 0.3 }, up: { x: 0, y: 0, z: 1 } },
-  side:  { eye: { x: 4.5, y: 0,   z: 2.0 }, up: { x: 0, y: 0, z: 1 } },
-  free:  { eye: { x: 3.0, y: 1.4, z: 2.0 }, up: { x: 0, y: 0, z: 1 } },
+  top:   { eye: { x: 0,   y: 0,   z: 4.0 }, up: { x: 0, y: 1, z: 0 } },
+  front: { eye: { x: 0,   y: 4.0, z: 0.5 }, up: { x: 0, y: 0, z: 1 } },
+  side:  { eye: { x: 4.0, y: 0,   z: 0.5 }, up: { x: 0, y: 0, z: 1 } },
+  free:  { eye: { x: 3.2, y: 3.2, z: 2.4 }, up: { x: 0, y: 0, z: 1 } },
 };
 
 function setView(name, btn) {
@@ -821,36 +1170,12 @@ if (altCanvas && plotData && plotData.U) {
     if (plotInitialised && plotData.takeoff) {
       Plotly.restyle('plot3d', {
         x: [[plotData.takeoff.E]], y: [[plotData.takeoff.N]], z: [[plotData.takeoff.U]],
-        'marker.size': [7], 'marker.color': ['#39ff6e'],
+        'marker.size': [7], 'marker.color': ['#FFE033'],
       }, [1]);
     }
   });
 }
 
-// ── mini sparklines ───────────────────────────────────────────────────────────
-function drawMiniGraph(id) {
-  const el = document.getElementById('mg-' + id);
-  if (!el) return;
-  const canvas = document.createElement('canvas');
-  canvas.width  = el.offsetWidth || 240;
-  canvas.height = 48;
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
-  el.style.position = 'relative';
-  el.appendChild(canvas);
-  const ctx  = canvas.getContext('2d');
-  const W    = canvas.width;
-  const H    = canvas.height;
-  const seed = id.charCodeAt(0);
-  ctx.beginPath();
-  for (let i = 0; i < W; i++) {
-    const y = H * 0.5 - Math.sin(i * 0.05 + seed) * H * 0.3 - Math.sin(i * 0.02 + seed * 0.7) * H * 0.15;
-    i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
-  }
-  ctx.strokeStyle = 'rgba(57,255,110,0.3)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-}
 
-Sessions.all().forEach(s => { if (document.getElementById('sc-' + s.id)) drawMiniGraph(s.id); });
 </script>
 {% endblock %}
